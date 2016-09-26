@@ -9,11 +9,11 @@ var express = require('express'),
   ws = require('ws');
 
 
-/*mongoose.connect(config.db);
+mongoose.connect(config.db);
 var db = mongoose.connection;
 db.on('error', function () {
   throw new Error('unable to connect to database at ' + config.db);
-});*/
+});
 
 var models = glob.sync(config.root + '/app/models/*.js');
 models.forEach(function (model) {
@@ -30,17 +30,13 @@ var server = https.createServer(config.security, app).listen(port, function() {
     console.log('Open ' + url.format(config.http_uri) + ' with a WebRTC capable browser');
 });
 
-var one2oneWss = new ws.Server({
-    server : server,
-    path : '/one2one'
-});
+
 
 var one2manyWss = new ws.Server({
     server : server,
     path : '/one2many'
 });
 
-require('./app/socket/one2one_simple').interview(one2oneWss);
-//require('./app/socket/one2many').conference(one2manyWss);
+require('./app/socket/one2many').conference(one2manyWss);
 
 
