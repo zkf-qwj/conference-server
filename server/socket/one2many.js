@@ -2,11 +2,9 @@ var ws = require('ws');
 var minimist = require('minimist');
 var url = require('url');
 var kurento = require('kurento-client');
-var fs = require('fs');
-var https = require('https');
-var config = require('../../config/config');
+var config = require('../config/environment');
 var _ = require('underscore');
-var memberList = require('../demo/data');
+var memberList = [];
 /*
  * Global variable
  */

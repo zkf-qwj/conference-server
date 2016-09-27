@@ -1,0 +1,47 @@
+{
+  "name": "call-control-server",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.13.3",
+    "composable-middleware": "^0.3.0",
+    "compression": "^1.5.2",
+    "connect-mongo": "^1.3.2",
+    "cookie-parser": "^1.3.3",
+    "dotenv": "^2.0.0",
+    "ejs": "^2.5.2",
+    "errorhandler": "^1.4.3",
+    "express": "^4.13.3",
+    "express-jwt": "^5.0.0",
+    "express-session": "^1.14.1",
+    "fast-json-patch": "^1.1.1",
+    "glob": "^6.0.4",
+    "jsonwebtoken": "^7.1.9",
+    "kurento-client": "^6.0.0",
+    "lusca": "^1.4.1",
+    "method-override": "^2.3.0",
+    "minimist": "1.2.0",
+    "mongodb": "^2.2.10",
+    "mongoose": "^4.1.2",
+    "morgan": "^1.6.1",
+    "passport": "^0.3.2",
+    "passport-facebook": "^2.1.1",
+    "passport-local": "^1.0.0",
+    "serve-favicon": "^2.3.0",
+    "shrink-ray": "^0.1.3",
+    "socket.io": "^1.4.8",
+    "webpack": "^1.13.2",
+    "webpack-dev-middleware": "^1.8.3",
+    "ws": "1.1.1"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-ruby-sass": "^2.0.1",
+    "gulp-nodemon": "^2.0.2",
+    "gulp-livereload": "^3.8.0",
+    "gulp-plumber": "^1.0.0"
+  }
+}
