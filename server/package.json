@@ -19,6 +19,7 @@
     "express-session": "^1.14.1",
     "fast-json-patch": "^1.1.1",
     "glob": "^6.0.4",
+    "gulp-uglify": "^2.0.0",
     "jsonwebtoken": "^7.1.9",
     "kurento-client": "^6.0.0",
     "lusca": "^1.4.1",

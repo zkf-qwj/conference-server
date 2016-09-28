@@ -1,8 +1,8 @@
 'use strict';
 
-var User = require( './user.model');
-var config = require( '../../config/environment');
-var jwt = require( 'jsonwebtoken');
+var User =require( './user.model');
+var config =require( '../../config/environment');
+var jwt =require( 'jsonwebtoken');
 
 function validationError(res, statusCode) {
   statusCode = statusCode || 422;
@@ -24,18 +24,24 @@ function handleError(res, statusCode) {
  */
 
 module.exports = {
-        index: function (req, res) {
+        index:index,
+        info:show,
+        create:create,
+        remove:destroy
+}
+
+ function index(req, res) {
   return User.find({}, '-salt -password').exec()
     .then(users => {
       res.status(200).json(users);
     })
     .catch(handleError(res));
-},
+}
 
 /**
  * Creates a new user
  */
-create: function (req, res) {
+ function create(req, res) {
   var newUser = new User(req.body);
   newUser.provider = 'local';
   newUser.role = 'user';
@@ -47,12 +53,12 @@ create: function (req, res) {
       res.json({ token });
     })
     .catch(validationError(res));
-},
+}
 
 /**
  * Get a single user
  */
-show: function (req, res, next) {
+ function show(req, res, next) {
   var userId = req.params.id;
 
   return User.findById(userId).exec()
@@ -63,24 +69,24 @@ show: function (req, res, next) {
       res.json(user.profile);
     })
     .catch(err => next(err));
-},
+}
 
 /**
  * Deletes a user
  * restriction: 'admin'
  */
-destroy: function (req, res) {
+ function destroy(req, res) {
   return User.findByIdAndRemove(req.params.id).exec()
     .then(function() {
       res.status(204).end();
     })
     .catch(handleError(res));
-},
+}
 
 /**
  * Change a users password
  */
-changePassword: function (req, res) {
+ function changePassword(req, res) {
   var userId = req.user._id;
   var oldPass = String(req.body.oldPassword);
   var newPass = String(req.body.newPassword);
@@ -98,12 +104,12 @@ changePassword: function (req, res) {
         return res.status(403).end();
       }
     });
-},
+}
 
 /**
  * Get my info
  */
-me: function (req, res, next) {
+ function me(req, res, next) {
   var userId = req.user._id;
 
   return User.findOne({ _id: userId }, '-salt -password').exec()
@@ -114,12 +120,11 @@ me: function (req, res, next) {
       res.json(user);
     })
     .catch(err => next(err));
-},
+}
 
 /**
  * Authentication callback
  */
-authCallback: function (req, res) {
+ function authCallback(req, res) {
   res.redirect('/');
-}
 }
