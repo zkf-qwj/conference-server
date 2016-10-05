@@ -8,7 +8,8 @@ module.exports = {
   mongo: {
     uri: 'mongodb://localhost/conference-test'
   },
-  ws_uri: "ws://training.demo.vietinterview.com:8888/kurento",
+  seedDB: true,
+  ws_uri: "ws://demo.vietinterview.com:8888/kurento",
   security:
       {
           key:'/etc/letsencrypt/live/training.demo.vietinterview.com/privkey.pem',

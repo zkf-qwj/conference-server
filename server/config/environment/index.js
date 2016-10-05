@@ -17,8 +17,6 @@ var path = require( 'path'),
 var all = {
   env: process.env.NODE_ENV,
 
-  // Root path of server
-  root: path.normalize(`${__dirname}/../../..`),
 
   // Browser-sync port
   browserSyncPort: process.env.BROWSER_SYNC_PORT || 9444,
@@ -49,13 +47,15 @@ var all = {
   facebook: {
     clientID: process.env.FACEBOOK_ID || 'id',
     clientSecret: process.env.FACEBOOK_SECRET || 'secret',
-    callbackURL: `${process.env.DOMAIN || ''}/auth/facebook/callback`
+    callbackURL: process.env.DOMAIN +'/auth/facebook/callback'
   }
 };
 
 // Export the config object based on the NODE_ENV
 // ==============================================
+
 module.exports = _.merge(
   all,
   require('./shared'),
-  require(`./${process.env.NODE_ENV}.js`) || {});
+  require('./'+process.env.NODE_ENV +'.js')
+)

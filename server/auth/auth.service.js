@@ -23,10 +23,10 @@ function isAuthenticated() {
             // Validate jwt
             .use(function(req, res, next) {
                 // allow access_token to be passed through body parameter as well
-                if (req.query && req.query.hasOwnProperty('token')) {
+                if (req.query && req.query.token) {
                     req.headers.authorization = 'Bearer ' + req.query.token;
                 }
-                if (req.body && req.body.hasOwnProperty('token')) {
+                if (req.body && req.body.token) {
                     req.headers.authorization = 'Bearer ' + req.body.token;
                 }
                 validateJwt(req, res, next);

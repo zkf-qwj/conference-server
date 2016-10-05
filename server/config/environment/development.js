@@ -9,7 +9,6 @@ module.exports = {
   mongo: {
     uri: 'mongodb://localhost/conference-dev'
   },
-
   // Seed database on startup
   seedDB: true,
   ws_uri: "ws://demo.vietinterview.com:8888/kurento",
