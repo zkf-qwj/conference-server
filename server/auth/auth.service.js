@@ -4,6 +4,7 @@ var jwt = require('jsonwebtoken');
 var expressJwt = require('express-jwt');
 var compose = require('composable-middleware');
 var User = require('../api/user/user.model');
+var sha1 = require('sha1');
 var validateJwt = expressJwt({
     secret: config.secrets.session
 });
@@ -13,6 +14,7 @@ var validateJwt = expressJwt({
  */
 module.exports = {
     isAuthenticated: isAuthenticated,
+    isTrusted: isTrusted,
     hasRole: hasRole,
     signToken: signToken,
     setTokenCookie: setTokenCookie
@@ -41,6 +43,28 @@ function isAuthenticated() {
                 }).catch(err => next(err));
             });
     }
+
+function isTrusted() {
+    return compose()
+        .use(function(req, res, next) {
+            console.log(req.body);
+            var checksum = req.body.checksum;
+            var payload = req.body.payload;
+            if (sha1(payload+config.secrets.api)!=checksum) {
+                console.log('Fail to validated external API call');
+                return res.json({status:false});
+            }
+            var payloadJson = JSON.parse(payload);
+            for(var elem in payloadJson) {
+                    var json = payloadJson[elem];
+                    if (typeof json != 'string') 
+                        req.body[elem] = JSON.stringify(json);
+                    else
+                        req.body[elem] =  json;
+             }
+            next();
+        });
+}
     /**
      * Checks if the user role meets the minimum requirements of the route
      */

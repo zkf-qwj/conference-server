@@ -17,10 +17,12 @@ module.exports = {
         create:create,
         update:update,
         login:login,
-        remove:destroy
+        remove:destroy,
+        trustLogin:trustLogin
 }
 // Gets a list of Member
 function index(req, res) {
+    
   return Member.find({'meetingId':req.query.meetingId}).select('-password').exec()
     .then(function(entity) {
         res.json({'memberList':entity,status:true})
@@ -44,18 +46,30 @@ function show(req, res) {
 function create(req, res) {
    var member = JSON.parse(req.body.member);
    member.meetingId = req.body.meetingId;
-  return  Member.findOne({'email':member.email,'meetingId':member.meetingId}).exec()
-  .then(function(entity){
-      if (entity)
-          res.json({status:false});
-      else {
-          Member.create(member)
-          .then(function(entity){
-              res.json({'id':entity.id,status:true})
-          });
-      }
-  })
-    .catch(handleError(res));
+   console.log(member);
+   return  Meeting.findById(req.body.meetingId).exec()
+   .then(function(meeting) {       
+       if (meeting) {
+           return  Member.findOne({'email':member.email,'meetingId':member.meetingId}).exec()
+           .then(function(entity){
+               if (entity) {
+                   res.json({'id':entity.id,status:true});
+               }
+               else {
+                   Member.create(member)
+                   .then(function(entity){
+                       res.json({'id':entity.id,status:true});
+                   });
+               }
+           })
+         .catch(handleError(res));
+       } else {
+           console.log('Invalid meetingId', member.meetingId );
+           res.json({status:false});
+       }
+   })
+   .catch(handleError(res));
+  
 }
 
 // Upserts the given Member in the DB at the specified ID
@@ -82,7 +96,6 @@ function destroy(req, res) {
     .catch(handleError(res));
 }
 
-//Creates a new Meeting in the DB
 function login(req, res) {
     
   return Member.findOne({'meetingId':req.body.meetingId,'email':req.body.email,'password':req.body.password}).exec()
@@ -103,3 +116,26 @@ function login(req, res) {
    })
    .catch(handleError(res));
 }
+
+
+function trustLogin(req, res) {
+    
+  return Member.findOne({'meetingId':req.body.meetingId,'_id':req.body.memberId}).exec()
+   .then(function(member) {
+       if (member) {
+           Member.find({'meetingId':req.body.meetingId}).exec()
+           .then(function(memberList) {
+               Meeting.findById(req.body.meetingId).exec()
+               .then(function(meeting) {
+                   res.json({status:true,memberList:memberList,meeting:meeting,member:member});
+               })
+               .catch(handleError(res));
+           })
+           .catch(handleError(res));
+       }
+       else
+           res.json({status:false});       
+   })
+   .catch(handleError(res));
+}
+

@@ -15,6 +15,10 @@ module.exports = {
           key:'/etc/letsencrypt/live/training.demo.vietinterview.com/privkey.pem',
           cert:'/etc/letsencrypt/live/training.demo.vietinterview.com/fullchain.pem'
       },
+  secrets: {
+      session: 'conference-secret',
+      api: '1234567890'
+    },
   sequelize: {
     uri: 'sqlite://',
     options: {

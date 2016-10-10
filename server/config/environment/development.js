@@ -16,6 +16,10 @@ module.exports = {
   {
       key:  './config/keys/server.key',
       cert: './config/keys/server.crt'
-  }
+  },
+  secrets: {
+      session: 'conference-secret',
+      api: '1234567890'
+    }
 
 };
