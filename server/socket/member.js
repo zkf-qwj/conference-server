@@ -37,8 +37,10 @@ function RoomMember(id,profile, ws,room)
     else this.invited = false;
     this.pipeline = null;
     this.pubWebRtcEndpoint = null;
-    this.pubCandidateQueue = [];
-    this.subCandidateQueue = {};
+    this.pubCandidateRecvQueue =  [];
+    this.pubCandidateSendQueue =  [];
+    this.subCandidateRecvQueue = {};
+    this.subCandidateSendQueue = {};
     this.subWebRtcEndpoint = {};
 }
 
@@ -98,7 +100,7 @@ RoomMember.prototype.onPublishIceCandidate =function( _candidate)
     }
     else
     {
-        this.pubCandidateQueue.push(candidate);
+        this.pubCandidateRecvQueue.push(candidate);
     }
 }
 
@@ -112,9 +114,9 @@ RoomMember.prototype.onSubscribeIceCandidate= function(publisher, _candidate)
     }
     else
     {
-        if (!this.subCandidateQueue[publisher.id]) 
-            this.subCandidateQueue[publisher.id] = [];
-        this.subCandidateQueue[publisher.id].push(candidate);
+        if (!this.subCandidateRecvQueue[publisher.id]) 
+            this.subCandidateRecvQueue[publisher.id] = [];
+        this.subCandidateRecvQueue[publisher.id].push(candidate);
     }
 }
 
@@ -152,25 +154,18 @@ RoomMember.prototype.publish = function(sdpOffer, callback)
                 if (error)
                 {
                     console.log('Create WebRtcEndpoint for publisher' +self.id+' error');
-                    resetKurentoClient();
                     pipeline.release();
                     return callback(false);
                 }
+                self.pipeline = pipeline;
+                self.pubWebRtcEndpoint = pubWebRtcEndpoint;
                 _.each(self.candidatesQueue, function(candidate)
                 {
                     pubWebRtcEndpoint.addIceCandidate(candidate);
                 });
-                self.pubCandidateQueue = [];
-                console.log('Publisher ' + self.id+': clear candidate')
-                pubWebRtcEndpoint.on('OnIceCandidate', function(event)
-                {
-                    console.log('Remote WebRtcEndpoint of publisher'+self.id +' flush candidate');
-                    var candidate = kurento.getComplexType('IceCandidate')
-                        (event.candidate);
-                    self.sendMessage( { id: 'onPublishIceCandidateResponse',
-                        candidate: candidate
-                    });
-                });
+                self.pubCandidateRecvQueue = [];
+                console.log('Publisher ' + self.id+': clear candidate queue')
+
                 pubWebRtcEndpoint.processOffer(sdpOffer, function(error,
                     sdpAnswer)
                 {
@@ -179,17 +174,35 @@ RoomMember.prototype.publish = function(sdpOffer, callback)
                         console.log(error)
                         return callback(false);
                     }
-                    pubWebRtcEndpoint.gatherCandidates(function(error)
-                    {
-                        if (error)
-                        {
-                            console.log(error)
-                            return callback(false);
-                        }
-                    });
+                    console.log('Publisher ' + self.id+': reply with answer');
                     callback(true, sdpAnswer);
-                    self.pipeline = pipeline;
-                    self.pubWebRtcEndpoint = pubWebRtcEndpoint;
+                    
+                });
+                pubWebRtcEndpoint.on('OnIceCandidate', function(event)
+                {
+                    console.log('Remote WebRtcEndpoint of publisher'+self.id +' send candidate');
+                    self.pubCandidateSendQueue.push(event.candidate);
+                    
+                });
+                pubWebRtcEndpoint.on('OnIceGatheringDone', function(event)
+                {
+                    _.each(self.pubCandidateSendQueue,function(_candidate) {
+                        var candidate = kurento.getComplexType('IceCandidate') (_candidate);
+                        console.log('Remote WebRtcEndpoint of publisher'+self.id +' send candidate');
+                            self.sendMessage( 
+                                { id: 'onPublishIceCandidateResponse',  
+                                    candidate: candidate
+                                });
+                    });
+                    self.pubCandidateSendQueue = [];
+                });
+                pubWebRtcEndpoint.gatherCandidates(function(error)
+                {
+                    if (error)
+                    {
+                        console.log(error)
+                        return callback(false);
+                    }
                 });
             });
         });
@@ -203,6 +216,7 @@ RoomMember.prototype.subscribe = function(publisher, sdpOffer, callback)
         if (error)
         {
             console.log('Create Kurento Client error');
+            resetKurentoClient();
             return callback(false);
         }
         if (!publisher.pipeline)
@@ -219,17 +233,8 @@ RoomMember.prototype.subscribe = function(publisher, sdpOffer, callback)
                 return callback(false);
             }
             console.log('Create WebRtcEndpoint for subscriber'+self.id +' publisher:' + publisher.id +' successfully');
+            self.subWebRtcEndpoint[publisher.id] =  subWebRtcEndpoint;
            
-            subWebRtcEndpoint.on('OnIceCandidate', function(event)
-            {
-                var candidate = kurento.getComplexType('IceCandidate')(event.candidate);
-                console.log('Remote WebRtcEndpoint of subscriber'+self.id +' flush candidate');
-                self.sendMessage( { id: 'onSubscribeIceCandidateResponse',
-                    candidate: candidate,
-                    pubId: publisher.id
-                });
-               
-            });
             subWebRtcEndpoint.processOffer(sdpOffer, function(error, sdpAnswer)
             {
                 if (error)
@@ -238,8 +243,7 @@ RoomMember.prototype.subscribe = function(publisher, sdpOffer, callback)
                     return callback(false);
                 }
                 console.log('Process offer for subscriber'+self.id +' publisher:' + publisher.id +' successfully');
-                publisher.pubWebRtcEndpoint.connect(subWebRtcEndpoint, function(
-                    error)
+                publisher.pubWebRtcEndpoint.connect(subWebRtcEndpoint, function( error)
                 {
                     if (error)
                     {
@@ -250,7 +254,28 @@ RoomMember.prototype.subscribe = function(publisher, sdpOffer, callback)
                         'Connect WebRtcEndpoint for subscriber'+self.id +' publisher:' + publisher.id +' successfully'
                     );
                     callback(true, sdpAnswer);
-                    
+                    _.each(self.subCandidateRecvQueue[publisher.id], function(candidate)
+                    {
+                        subWebRtcEndpoint.addIceCandidate(candidate);
+                    });
+                    self.subCandidateRecvQueue[publisher.id] = [];
+                    console.log('Subscriber  ' + self.id+': clear candidate on publisher:'+publisher.id )
+                    subWebRtcEndpoint.on('OnIceCandidate', function(event)
+                    {
+                        self.subCandidateRecvQueue[publisher.id].push(event.candidate);
+                    });
+                    subWebRtcEndpoint.on('OnIceGatheringDone', function(event)
+                    {
+                        _.each(self.subCandidateRecvQueue[publisher.id],function(_candidate) {
+                            var candidate = kurento.getComplexType('IceCandidate') (_candidate);
+                            console.log('Remote WebRtcEndpoint of subscriber'+self.id +' send candidate');
+                            self.sendMessage( { id: 'onSubscribeIceCandidateResponse',
+                                candidate: candidate,
+                                pubId: publisher.id
+                            });
+                        });
+                        self.subCandidateRecvQueue[publisher.id] = [];
+                    });
                     subWebRtcEndpoint.gatherCandidates(function(error)
                     {
                         if (error)
@@ -259,13 +284,7 @@ RoomMember.prototype.subscribe = function(publisher, sdpOffer, callback)
                             return callback(false);
                         }
                     });
-                    _.each(self.subCandidateQueue[publisher.id], function(candidate)
-                            {
-                                subWebRtcEndpoint.addIceCandidate(candidate);
-                            });
-                        self.subCandidateQueue[publisher.id] = [];
-                        self.subWebRtcEndpoint[publisher.id] =  subWebRtcEndpoint;
-                        console.log('Subscriber  ' + self.id+': clear candidate on publisher:'+publisher.id )
+                    console.log('Subscriber ' + self.id+': start gathering candidate');
                 });
             });
         });
