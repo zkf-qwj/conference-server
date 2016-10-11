@@ -159,7 +159,7 @@ RoomMember.prototype.publish = function(sdpOffer, callback)
                 }
                 self.pipeline = pipeline;
                 self.pubWebRtcEndpoint = pubWebRtcEndpoint;
-                _.each(self.candidatesQueue, function(candidate)
+                _.each(self.pubCandidateRecvQueue, function(candidate)
                 {
                     pubWebRtcEndpoint.addIceCandidate(candidate);
                 });
@@ -180,7 +180,6 @@ RoomMember.prototype.publish = function(sdpOffer, callback)
                 });
                 pubWebRtcEndpoint.on('OnIceCandidate', function(event)
                 {
-                    console.log('Remote WebRtcEndpoint of publisher'+self.id +' send candidate');
                     self.pubCandidateSendQueue.push(event.candidate);
                     
                 });
@@ -260,13 +259,15 @@ RoomMember.prototype.subscribe = function(publisher, sdpOffer, callback)
                     });
                     self.subCandidateRecvQueue[publisher.id] = [];
                     console.log('Subscriber  ' + self.id+': clear candidate on publisher:'+publisher.id )
+                    
+                    self.subCandidateSendQueue[publisher.id] = [];
                     subWebRtcEndpoint.on('OnIceCandidate', function(event)
                     {
-                        self.subCandidateRecvQueue[publisher.id].push(event.candidate);
+                        self.subCandidateSendQueue[publisher.id].push(event.candidate);
                     });
                     subWebRtcEndpoint.on('OnIceGatheringDone', function(event)
                     {
-                        _.each(self.subCandidateRecvQueue[publisher.id],function(_candidate) {
+                        _.each(self.subCandidateSendQueue[publisher.id],function(_candidate) {
                             var candidate = kurento.getComplexType('IceCandidate') (_candidate);
                             console.log('Remote WebRtcEndpoint of subscriber'+self.id +' send candidate');
                             self.sendMessage( { id: 'onSubscribeIceCandidateResponse',
@@ -274,7 +275,7 @@ RoomMember.prototype.subscribe = function(publisher, sdpOffer, callback)
                                 pubId: publisher.id
                             });
                         });
-                        self.subCandidateRecvQueue[publisher.id] = [];
+                        self.subCandidateSendQueue[publisher.id] = [];
                     });
                     subWebRtcEndpoint.gatherCandidates(function(error)
                     {
