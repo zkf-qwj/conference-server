@@ -47,13 +47,16 @@ module.exports = {
                         join(message.memberId, message.meetingId, ws);
                         break;
                     case 'publish':
-                        publish(message.memberId, message.meetingId, message.sdpOffer);
+                        publish(message.memberId, message.meetingId, message.sdpOffer,message.candidateList);
                         break;
                     case 'subscribe':
-                        subscribe(message.memberId, message.meetingId, message.pubId, message.sdpOffer);
+                        subscribe(message.memberId, message.meetingId, message.pubId, message.sdpOffer,message.candidateList);
                         break;
-                    case 'avail':
-                        avail(message.memberId, message.meetingId);
+                    case 'publishAvail':
+                        publishAvail(message.memberId, message.meetingId);
+                        break;
+                    case 'subscribeAvail':
+                        subscribeAvail(message.memberId, message.meetingId, message.pubId);
                         break;
                     case 'handUp':
                         handUp(message.memberId, message.meetingId);
@@ -69,13 +72,6 @@ module.exports = {
                         break;
                     case 'discard':
                         discard(message.meetingId, message.inviteeId);
-                        break;
-                    case 'onPublishIceCandidate':
-                        onPublishIceCandidate(message.memberId, message.meetingId, message.candidate);
-                        break;
-                    case 'onSubscribeIceCandidate':
-                        onSubscribeIceCandidate(message.memberId, message.meetingId, message.pubId,
-                            message.candidate);
                         break;
                     case 'leave':
                         leave(message.memberId, message.meetingId);
@@ -98,14 +94,26 @@ module.exports = {
     }
 }
 
-function avail(memberId, meetingId) {
+function publishAvail(memberId, meetingId) {
     try {
         var room = roomManager.getRoomById(meetingId);
-        var member = room.getMemberById(memberId);
-        member.deviceReady();
+        var publisher = room.getMemberById(memberId);
+        publisher.readyToPublish();
         room.broadcastMember();
     } catch (exc) {
-        console.log('Avail error ', memberId, meetingId);
+        console.log('Pub Avail error ', memberId, meetingId);
+    }
+}
+
+function subscribeAvail(memberId, meetingId,pubId) {
+    try {
+        var room = roomManager.getRoomById(meetingId);
+        var subscriber = room.getMemberById(memberId);
+        var publisher = room.getMemberById(pubId);
+        subscriber.readyToSubscribe(publisher);
+        room.broadcastMember();
+    } catch (exc) {
+        console.log('Sub Avail error ', memberId, meetingId,pubId);
     }
 }
 
@@ -129,17 +137,18 @@ function stop(sessionId) {
     }
 }
 
-function publish(memberId, meetingId, sdpOffer) {
+function publish(memberId, meetingId, sdpOffer,candidateList) {
     try {
         var room = roomManager.getRoomById(meetingId);
         var publisher = room.getMemberById(memberId);
         var rejectCause = 'User ' + memberId + ' is not registered';
-        publisher.publish(sdpOffer, function(success, sdpAnswer) {
+        publisher.publish(sdpOffer,candidateList, function(success, sdpAnswer,candidateList) {
             if (success) {
                 publisher.sendMessage({
                     id: 'publishResponse',
                     response: 'accepted',
-                    sdpAnswer: sdpAnswer
+                    sdpAnswer: sdpAnswer,
+                    candidateList:candidateList
                 });
             } else {
                 publisher.sendMessage({
@@ -153,19 +162,20 @@ function publish(memberId, meetingId, sdpOffer) {
     }
 }
 
-function subscribe(memberId, meetingId, pubId, sdpOffer) {
+function subscribe(memberId, meetingId, pubId, sdpOffer,candidateList) {
     try {
         var room = roomManager.getRoomById(meetingId);
         var publisher = room.getMemberById(pubId);
         var subscriber = room.getMemberById(memberId);
         var rejectCause = 'User ' + memberId + ' is not registered';
-        subscriber.subscribe(publisher, sdpOffer, function(success, sdpAnswer) {
+        subscriber.subscribe(publisher, sdpOffer, candidateList,function(success, sdpAnswer,candidateList) {
             if (success) {
                 subscriber.sendMessage( {
                     id: 'subscribeResponse',
                     response: 'accepted',
                     pubId: pubId,
-                    sdpAnswer: sdpAnswer
+                    sdpAnswer: sdpAnswer,
+                    candidateList:candidateList
                 });
             } else {
                 subscriber.sendMessage( {
@@ -261,26 +271,5 @@ function chat(memberId, meetingId, text) {
         room.broadcastChat(member, text)
     } catch (exc) {
         console.log('Chat error ', memberId, meetingId);
-    }
-}
-
-function onSubscribeIceCandidate(memberId, meetingId, pubId, _candidate) {
-    try {
-        var room = roomManager.getRoomById(meetingId);
-        var subscriber = room.getMemberById(memberId);
-        var publisher = room.getMemberById(pubId);
-        subscriber.onSubscribeIceCandidate(publisher, _candidate);
-    } catch (exc) {
-        console.log('onSubscribeIceCandidate error ', memberId, meetingId);
-    }
-}
-
-function onPublishIceCandidate(memberId, meetingId, _candidate) {
-    try {
-        var room = roomManager.getRoomById(meetingId);
-        var publisher = room.getMemberById(memberId);
-        publisher.onPublishIceCandidate(_candidate);
-    } catch (exc) {
-        console.log('onPublishIceCandidate error ', memberId, meetingId);
     }
 }
