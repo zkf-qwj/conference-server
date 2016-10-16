@@ -98,10 +98,10 @@ function destroy(req, res) {
 
 function login(req, res) {
     
-  return Member.findOne({'meetingId':req.body.meetingId,'email':req.body.email,'password':req.body.password}).exec()
+  return Member.findOne({'meetingId':req.body.meetingId,'email':req.body.email,'password':req.body.password}).select('-password').exec()
    .then(function(member) {
        if (member) {
-           Member.find({'meetingId':req.body.meetingId}).exec()
+           Member.find({'meetingId':req.body.meetingId}).select('-password').exec()
            .then(function(memberList) {
                Meeting.findById(req.body.meetingId).exec()
                .then(function(meeting) {
@@ -120,10 +120,10 @@ function login(req, res) {
 
 function trustLogin(req, res) {
     
-  return Member.findOne({'meetingId':req.body.meetingId,'_id':req.body.memberId}).exec()
+  return Member.findOne({'meetingId':req.body.meetingId,'_id':req.body.memberId}).select('-password').exec()
    .then(function(member) {
        if (member) {
-           Member.find({'meetingId':req.body.meetingId}).exec()
+           Member.find({'meetingId':req.body.meetingId}).select('-password').exec()
            .then(function(memberList) {
                Meeting.findById(req.body.meetingId).exec()
                .then(function(meeting) {

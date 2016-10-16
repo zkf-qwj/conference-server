@@ -111,7 +111,6 @@ function subscribeAvail(memberId, meetingId,pubId) {
         var subscriber = room.getMemberById(memberId);
         var publisher = room.getMemberById(pubId);
         subscriber.readyToSubscribe(publisher);
-        room.broadcastMember();
     } catch (exc) {
         console.log('Sub Avail error ', memberId, meetingId,pubId);
     }
@@ -180,7 +179,8 @@ function subscribe(memberId, meetingId, pubId, sdpOffer,candidateList) {
             } else {
                 subscriber.sendMessage( {
                     id: 'subscribeResponse',
-                    response: 'rejected'
+                    response: 'rejected',
+                    pubId: pubId
                 });
             }
         })

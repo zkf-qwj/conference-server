@@ -1,0 +1,2 @@
+websocket-stream/node_modules/ws/lib/BufferPool.js
+Chnage 'new Buffer' to Buffer.alloc()
