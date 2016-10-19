@@ -82,6 +82,9 @@ module.exports = {
                     case 'chat':
                         chat(message.memberId, message.meetingId, message.text);
                         break;
+                    case 'whiteboard':
+                        whiteboard(message.memberId, message.meetingId,message.event,message.object);
+                        break;
                     default:
                         ws.send(JSON.stringify({
                             id: 'error',
@@ -199,6 +202,7 @@ function join(memberId, meetingId, ws) {
                     ws.send(JSON.stringify({
                         id: 'joinResponse',
                         response: 'accepted',
+                        whiteboard:room.whiteboardBuffer
                     }));
                     room.broadcastMember();
                 } else ws.send(JSON.stringify({
@@ -271,5 +275,14 @@ function chat(memberId, meetingId, text) {
         room.broadcastChat(member, text)
     } catch (exc) {
         console.log('Chat error ', memberId, meetingId);
+    }
+}
+
+function whiteboard(memberId, meetingId, event,object) {
+    try {
+        var room = roomManager.getRoomById(meetingId);
+        var member = room.getMemberById(memberId);
+    } catch (exc) {
+        console.log('Whiteboard error ', memberId, meetingId);
     }
 }

@@ -13,7 +13,7 @@ module.exports = {
   port: process.env.OPENSHIFT_NODEJS_PORT
     || process.env.port
     || 8080,
-    
+    hostname : 'localhost',
 
   // MongoDB connection options
   mongo: {
@@ -26,5 +26,7 @@ module.exports = {
       session: 'conference-secret',
       api: '1234567890'
     },
-  seedDB: true
+  seedDB: true,
+  uploadDir:'/home/data/conferencecontrol/public',
+  scriptDir:'/home/data/conferencecontrol/scripts'
 };

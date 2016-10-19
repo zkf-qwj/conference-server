@@ -5,6 +5,7 @@
 'use strict';
 
 var express = require( 'express');
+var  cors = require('cors');
 var favicon = require( 'serve-favicon');
 var morgan = require( 'morgan');
 var shrinkRay = require( 'shrink-ray');
@@ -27,7 +28,7 @@ module.exports= function(app) {
  
 
   app.use(morgan('dev'));
-  
+  app.use(cors());
   app.set('views', config.root + '/server/views');
   app.engine('html', require('ejs').renderFile);
   app.set('view engine', 'html');
@@ -37,7 +38,7 @@ module.exports= function(app) {
   app.use(methodOverride());
   app.use(cookieParser());
   app.use(passport.initialize());
-
+  app.use("/public",express.static(config.uploadDir));
 
   // Persist sessions with MongoStore / sequelizeStore
   // We need to enable sessions for passport-twitter because it's an
@@ -69,7 +70,7 @@ module.exports= function(app) {
   app.use(function (req, res, next) {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-      res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+      res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Accept,Range,Content-Type, Content-Range, Content-Disposition, Content-Description');
       res.setHeader('Access-Control-Allow-Credentials', true);
 
       next();

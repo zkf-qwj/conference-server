@@ -11,6 +11,9 @@ module.exports = {
   },
   // Seed database on startup
   seedDB: true,
+  uploadDir:'E:\\git\\conference-server\\server\\public',
+  scriptDir:'E:\\git\\conference-server\\server\\scripts',
+  hostname : 'localhost',
   ws_uri: "ws://demo.vietinterview.com:8888/kurento",
   security:
   {

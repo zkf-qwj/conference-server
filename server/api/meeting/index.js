@@ -11,4 +11,5 @@ router.post('/',auth.isAuthenticated(), controller.create);
 router.put('/',auth.isAuthenticated(), controller.update);
 router.post('/end',auth.isAuthenticated(), controller.end);
 router.get('/info',auth.isAuthenticated(), controller.info);
+router.post('/upload',controller.upload);
 module.exports = router;

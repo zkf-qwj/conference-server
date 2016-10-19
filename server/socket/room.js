@@ -6,6 +6,7 @@ function Room(id)
 {
     this.id = id;
     this.memberById = {};
+    this.whiteboardBuffer = []
 }
 
 Room.prototype.registerMember = function(id,ws,callback)
@@ -63,6 +64,30 @@ Room.prototype.broadcastChat = function(source,text)
                     console.log(exception);
                 }
             });
+}
+
+Room.prototype.broadcastWhiteboard = function(source,event,object)
+{
+    if (source.profile.role!='presenter')
+        throw 'Only presenter can send whiteboard event';
+    this.whiteboardBuffer.push({memberId:source.id,event:event,object:object}); 
+    _.each(this.memberById, function(m)
+    {
+        if (source.id != m.id )
+            try
+            {            
+                m.ws.send(JSON.stringify(
+                {
+                    id: 'whiteboard',
+                    event: event,
+                    object: object
+                }));
+            }
+            catch (exception)
+            {
+                console.log(exception);
+            }
+    });
 }
 
 

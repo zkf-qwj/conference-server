@@ -10,6 +10,9 @@ module.exports = {
   },
   seedDB: true,
   ws_uri: "ws://demo.vietinterview.com:8888/kurento",
+  uploadDir:'/home/data/conferencecontrol/public',
+  scriptDir:'/home/data/conferencecontrol/scripts',
+  hostname : 'training.demo.vietinterview.com',
   security:
       {
           key:'/etc/letsencrypt/live/training.demo.vietinterview.com/privkey.pem',

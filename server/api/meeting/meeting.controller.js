@@ -1,9 +1,12 @@
 'use strict';
 
+var formidable = require('formidable');
+var path = require('path');
 var jsonpatch =require( 'fast-json-patch'),
+fs = require('fs'),
 Meeting = require('./meeting.model');
-
-
+var config = require('../../config/environment');
+var url = require('url');
 
 function handleError(res, statusCode) {
   statusCode = statusCode || 500;
@@ -18,7 +21,8 @@ module.exports = {
         create:create,
         update:update,
         remove:destroy,
-        end:end
+        end:end,
+        upload:upload
 }
 // Gets a list of Meeting
 function index(req, res) {
@@ -83,4 +87,60 @@ function end(req, res) {
     .catch(handleError(res));
 }
 
+//Upload material for meeting
+function upload(req, res) {
+ // create an incoming form object
+    var form = new formidable.IncomingForm();
+    form.multiples = false;
+    // store all uploads in the /uploads directory
+    form.uploadDir = config.uploadDir;
+    form.on('file', function(field, file) {
+      var timestamp = new Date();
+      var filename = timestamp.getTime() + file.name
+      var filepath = path.join(form.uploadDir, filename ) ;
+      fs.rename(file.path, filepath);
+      var urlLink = url.format({
+          protocol: req.protocol,
+          hostname: config.hostname,
+          port: config.port,
+          pathname: '/public/'+filename
+        });
+      if (filename.endsWith('pdf'))
+          res.json({status:true,url:urlLink});
+      else 
+      {
+          urlLink += '.pdf';
+          var unoconv = require('child_process').spawn(
+                  'unoconv',
+                  // second argument is array of parameters, e.g.:
+                  ['-o'
+                  , filepath +'.pdf'
+                  ,filepath]
+                  );
+
+          var output = "";
+          unoconv.stdout.on('data', function(data){ output += data });
+          unoconv.on('close', function(code){ 
+            if (code !== 0) {  
+                return res.json({status:false});
+            }
+            return res.json({status:true,url:urlLink});
+          });
+      } 
+    });
+
+    form.on('error', function(err) {
+      console.log('An error has occured: \n' + err);
+      res.json({status:false});
+    });
+
+    form.on('end', function() {
+        
+    });
+
+    // parse the incoming request containing the form data
+    form.parse(req);
+    
+
+}
 
