@@ -25,7 +25,12 @@ RoomManager.prototype.registerRoom = function(id,callback)
 }
 RoomManager.prototype.unregisterRoom = function(id)
 {
-    if (this.roomById[id]) delete this.roomById[id];
+    try {
+        this.roomById[id].close();
+        if (this.roomById[id]) delete this.roomById[id];
+    } catch (exc) {
+        console.log('End error ', id);
+    }    
 }
 
 RoomManager.prototype.getRoomById = function(id)

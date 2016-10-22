@@ -39,10 +39,10 @@ Room.prototype.getMemberById = function(id)
 }
 
 
-Room.prototype.moderator = function(id)
+Room.prototype.moderator = function()
 {
-    return _.find(this.memberById, function(member) {
-        member.profile.role == 'presenter';
+     return _.find(this.memberById, function(member) {
+        return member.profile.role == 'presenter';
     });
 }
 

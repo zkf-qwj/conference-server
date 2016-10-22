@@ -238,12 +238,7 @@ function handDown(memberId, meetingId) {
 }
 
 function end(meetingId) {
-    try {
-        var room = roomManager.getRoomById(meetingId);
-        room.close();
-    } catch (exc) {
-        console.log('End error ', meetingId);
-    }
+    roomManager.unregisterRoom(meetingId);
 }
 
 function invite(meetingId, inviteeId) {
@@ -282,6 +277,7 @@ function whiteboard(memberId, meetingId, event,object) {
     try {
         var room = roomManager.getRoomById(meetingId);
         var member = room.getMemberById(memberId);
+        room.broadcastWhiteboard(member,event,object);
     } catch (exc) {
         console.log('Whiteboard error ', memberId, meetingId);
     }
