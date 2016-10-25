@@ -1,5 +1,5 @@
 var kurento = require('kurento-client');
-var config = require('../config/environment');
+var config = require('../../config/environment');
 var _ = require('underscore');
 
 
@@ -10,9 +10,7 @@ function RoomMember(id,profile, ws,room)
     this.room = room;
     this.avail = false;
     this.profile = profile;
-    if (this.profile.role == 'presenter') 
-        this.invited = true;
-    else this.invited = false;
+    this.invited = true;
     this.pipeline = null;
     this.pubWebRtcEndpoint = null;
     this.pubCandidateSendQueue =  [];
@@ -74,26 +72,6 @@ RoomMember.prototype.readyToSubscribe = function(publisher)
     });
 }
 
-RoomMember.prototype.raiseHand =  function() {
-    var moderator = this.room.moderator(); 
-    if (moderator) {
-            moderator.sendMessage(  {
-                id: 'handUp',
-                memberId: this.id
-            });       
-    }
-}
-
-RoomMember.prototype.lowHand =  function() {
-    var moderator = this.room.moderator(); 
-    if (moderator) {
-            moderator.sendMessage( {
-                id: 'handDown',
-                memberId: this.id
-            });
-        }
-}
-
 RoomMember.prototype.onDiscussion =  function() {
     this.invited = true;
 }
@@ -115,7 +93,6 @@ RoomMember.prototype.leave = function() {
 RoomMember.prototype.publish = function(sdpOffer,candidateList, callback)
 {
     var self = this;
-    //try {
         this.getKurentoClient(function(error, kurentoClient)
         {
             if (error)
@@ -177,16 +154,11 @@ RoomMember.prototype.publish = function(sdpOffer,candidateList, callback)
                 });
             });
         });
-    /*} catch (exc) {
-        console.log('Publisher  ' , self.id ,': fail to get Kurento client');
-        self.kurentoClient = null;
-        callback(false);
-    }*/
+
 }
 RoomMember.prototype.subscribe = function(publisher, sdpOffer, candidateList,callback)
 {
     var self = this;
-    //try {
         this.getKurentoClient(function(error, kurentoClient)
         {
             if (error)
@@ -245,11 +217,7 @@ RoomMember.prototype.subscribe = function(publisher, sdpOffer, candidateList,cal
                 });
             });
         })
-   /* } catch (exc) {
-        console.log('Subscriber  ' , self.id ,': fail to get Kurento client');
-        self.kurentoClient = null;
-        callback(false);
-    }*/
+  
 }
 
 module.exports = RoomMember

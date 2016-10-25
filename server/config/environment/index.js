@@ -22,7 +22,9 @@ var all = {
   browserSyncPort: process.env.BROWSER_SYNC_PORT || 9444,
 
   // Server port
-  port: process.env.PORT || 9444,
+  apiPort: process.env.API_PORT || 9444,
+  trainingPort: process.env.ONE2MANY_PORT || 9445,
+  conferencePort: process.env.MANY2MANY_PORT || 9446,
 
   // Server IP
   ip: process.env.IP || '0.0.0.0',

@@ -1,6 +1,6 @@
 var _ = require('underscore');
 var RoomMember = require('./member.js')
-var Member = require('../api/member/member.model');
+var Member = require('../../api/member/member.model');
 
 function Room(id)
 {

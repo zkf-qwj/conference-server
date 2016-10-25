@@ -1,7 +1,7 @@
 var ws = require('ws');
 var minimist = require('minimist');
 var url = require('url');
-var config = require('../config/environment');
+var config = require('../../config/environment');
 var _ = require('underscore');
 var RoomManager = require('./room_manager.js');
 var roomManager = new RoomManager();

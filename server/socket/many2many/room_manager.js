@@ -1,5 +1,5 @@
 var Room = require('./room.js')
-var Meeting = require('../api/meeting/meeting.model');
+var Meeting = require('../../api/meeting/meeting.model');
 
 function RoomManager()
 {
