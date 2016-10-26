@@ -56,7 +56,7 @@ function startServer() {
   app.trainingServer = trainingServer.listen(config.trainingPort, config.ip, function() {
       console.log('Express server listening on %d, in %s mode', config.trainingPort, app.get('env'));
     });
-  app.conferenceServer = apiServer.listen(config.conferencePort, config.ip, function() {
+  app.conferenceServer = conferenceServer.listen(config.conferencePort, config.ip, function() {
       console.log('Express server listening on %d, in %s mode', config.conferencePort, app.get('env'));
     });
 }

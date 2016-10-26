@@ -102,7 +102,7 @@ function upload(req, res) {
       var urlLink = url.format({
           protocol: req.protocol,
           hostname: config.hostname,
-          port: config.port,
+          port: config.apiPort,
           pathname: '/public/'+filename
         });
       if (filename.endsWith('pdf'))
