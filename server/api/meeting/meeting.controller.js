@@ -22,7 +22,8 @@ module.exports = {
         update:update,
         remove:destroy,
         end:end,
-        upload:upload
+        uploadPresentation:uploadPresentation,
+        shareFile:shareFile
 }
 // Gets a list of Meeting
 function index(req, res) {
@@ -87,8 +88,8 @@ function end(req, res) {
     .catch(handleError(res));
 }
 
-//Upload material for meeting
-function upload(req, res) {
+//Upload presentation for meeting
+function uploadPresentation(req, res) {
  // create an incoming form object
     var form = new formidable.IncomingForm();
     form.multiples = false;
@@ -141,6 +142,44 @@ function upload(req, res) {
     // parse the incoming request containing the form data
     form.parse(req);
     
+
+}
+
+
+//Share file for meeting
+function shareFile(req, res) {
+// create an incoming form object
+  var form = new formidable.IncomingForm();
+  form.multiples = false;
+  // store all uploads in the /uploads directory
+  form.uploadDir = config.uploadDir;
+  form.on('file', function(field, file) {
+    var timestamp = new Date();
+    var filename = timestamp.getTime() + file.name
+    var filepath = path.join(form.uploadDir, filename ) ;
+    fs.rename(file.path, filepath);
+    var urlLink = url.format({
+        protocol: req.protocol,
+        hostname: config.hostname,
+        port: config.apiPort,
+        pathname: '/public/'+filename
+      });
+      res.json({status:true,url:urlLink});
+   
+  });
+
+  form.on('error', function(err) {
+    console.log('An error has occured: \n' + err);
+    res.json({status:false});
+  });
+
+  form.on('end', function() {
+      
+  });
+
+  // parse the incoming request containing the form data
+  form.parse(req);
+  
 
 }
 

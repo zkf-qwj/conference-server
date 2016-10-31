@@ -6,7 +6,8 @@ function Room(id)
 {
     this.id = id;
     this.memberById = {};
-    this.whiteboardBuffer = []
+    this.presentationBuffer = []
+    this.fileShare = []
 }
 
 Room.prototype.registerMember = function(id,ws,callback)
@@ -66,11 +67,11 @@ Room.prototype.broadcastChat = function(source,text)
             });
 }
 
-Room.prototype.broadcastWhiteboard = function(source,event,object)
+Room.prototype.broadcastPresentation = function(source,event,object)
 {
     if (source.profile.role!='presenter')
-        throw 'Only presenter can send whiteboard event';
-    this.whiteboardBuffer.push({memberId:source.id,event:event,object:object}); 
+        throw 'Only presenter can send presentation event';
+    this.presentationdBuffer.push({memberId:source.id,event:event,object:object}); 
     _.each(this.memberById, function(m)
     {
         if (source.id != m.id )
@@ -78,7 +79,7 @@ Room.prototype.broadcastWhiteboard = function(source,event,object)
             {            
                 m.ws.send(JSON.stringify(
                 {
-                    id: 'whiteboard',
+                    id: 'presentation',
                     event: event,
                     object: object
                 }));
@@ -90,7 +91,29 @@ Room.prototype.broadcastWhiteboard = function(source,event,object)
     });
 }
 
-
+Room.prototype.broadcastFileShare = function(source,event,object)
+{
+    if (source.profile.role!='presenter')
+        throw 'Only presenter can send fileshare event';
+    this.fileShare.push({memberId:source.id,event:event,object:object}); 
+    _.each(this.memberById, function(m)
+    {
+        if (source.id != m.id )
+            try
+            {            
+                m.ws.send(JSON.stringify(
+                {
+                    id: 'fileShare',
+                    event: event,
+                    object: object
+                }));
+            }
+            catch (exception)
+            {
+                console.log(exception);
+            }
+    });
+}
 
 Room.prototype.close =function() {
 _.each(this.memberById, function(member)
@@ -116,7 +139,8 @@ Room.prototype.broadcastMember =function()
         return {
             _id: member.id,
             avail: member.avail,
-            invited: member.invited
+            invited: member.invited,
+            screenAvail: member.screenAvail
         }
     });
     

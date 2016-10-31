@@ -49,14 +49,29 @@ module.exports = {
                     case 'publish':
                         publish(message.memberId, message.meetingId, message.sdpOffer,message.candidateList);
                         break;
+                    case 'publishScreen':
+                        publishScreen(message.memberId, message.meetingId, message.sdpOffer,message.candidateList);
+                        break;
                     case 'subscribe':
                         subscribe(message.memberId, message.meetingId, message.pubId, message.sdpOffer,message.candidateList);
+                        break;
+                    case 'subscribeScreen':
+                        subscribeScreen(message.memberId, message.meetingId, message.pubId,message.sdpOffer,message.candidateList);
                         break;
                     case 'publishAvail':
                         publishAvail(message.memberId, message.meetingId);
                         break;
+                    case 'publishScreenAvail':
+                        publishScreenAvail(message.memberId, message.meetingId);
+                        break;
+                    case 'publishScreenUnavail':
+                        publishScreenUnavail(message.memberId, message.meetingId);
+                        break;
                     case 'subscribeAvail':
                         subscribeAvail(message.memberId, message.meetingId, message.pubId);
+                        break;
+                    case 'subscribeScreenAvail':
+                        subscribeScreenAvail(message.memberId, message.meetingId,message.pubId);
                         break;
                     case 'handUp':
                         handUp(message.memberId, message.meetingId);
@@ -82,8 +97,11 @@ module.exports = {
                     case 'chat':
                         chat(message.memberId, message.meetingId, message.text);
                         break;
-                    case 'whiteboard':
-                        whiteboard(message.memberId, message.meetingId,message.event,message.object);
+                    case 'fileShare':
+                        fileShare(message.memberId, message.meetingId,message.event,message.object);
+                        break;
+                    case 'presentation':
+                        presentation(message.memberId, message.meetingId,message.event,message.object);
                         break;
                     default:
                         ws.send(JSON.stringify({
@@ -108,12 +126,45 @@ function publishAvail(memberId, meetingId) {
     }
 }
 
+function publishScreenAvail(memberId, meetingId) {
+    try {
+        var room = roomManager.getRoomById(meetingId);
+        var publisher = room.getMemberById(memberId);
+        publisher.readyToPublishScreen();
+        room.broadcastMember();
+    } catch (exc) {
+        console.log('Pub Avail error ', memberId, meetingId);
+    }
+}
+
+function publishScreenUnavail(memberId, meetingId) {
+    try {
+        var room = roomManager.getRoomById(meetingId);
+        var publisher = room.getMemberById(memberId);
+        publisher.notReadyToPublishScreen();
+        room.broadcastMember();
+    } catch (exc) {
+        console.log('Pub Avail error ', memberId, meetingId);
+    }
+}
+
 function subscribeAvail(memberId, meetingId,pubId) {
     try {
         var room = roomManager.getRoomById(meetingId);
         var subscriber = room.getMemberById(memberId);
         var publisher = room.getMemberById(pubId);
         subscriber.readyToSubscribe(publisher);
+    } catch (exc) {
+        console.log('Sub Avail error ', memberId, meetingId,pubId);
+    }
+}
+
+function subscribeScreenAvail(memberId, meetingId,pubId) {
+    try {
+        var room = roomManager.getRoomById(meetingId);
+        var subscriber = room.getMemberById(memberId);
+        var publisher = room.getMemberById(pubId);
+        subscriber.readyToSubscribeScreen(publisher);
     } catch (exc) {
         console.log('Sub Avail error ', memberId, meetingId,pubId);
     }
@@ -164,6 +215,31 @@ function publish(memberId, meetingId, sdpOffer,candidateList) {
     }
 }
 
+function publishScreen(memberId, meetingId, sdpOffer,candidateList) {
+    try {
+        var room = roomManager.getRoomById(meetingId);
+        var publisher = room.getMemberById(memberId);
+        var rejectCause = 'User ' + memberId + ' is not registered';
+        publisher.publishScreen(sdpOffer,candidateList, function(success, sdpAnswer,candidateList) {
+            if (success) {
+                publisher.sendMessage({
+                    id: 'publishScreenResponse',
+                    response: 'accepted',
+                    sdpAnswer: sdpAnswer,
+                    candidateList:candidateList
+                });
+            } else {
+                publisher.sendMessage({
+                    id: 'publishScreenResponse',
+                    response: 'rejected'
+                });
+            }
+        })
+    } catch (exc) {
+        console.log('Publish error ', memberId, meetingId);
+    }
+}
+
 function subscribe(memberId, meetingId, pubId, sdpOffer,candidateList) {
     try {
         var room = roomManager.getRoomById(meetingId);
@@ -192,6 +268,35 @@ function subscribe(memberId, meetingId, pubId, sdpOffer,candidateList) {
     }
 }
 
+
+function subscribeScreen(memberId, meetingId, pubId, sdpOffer,candidateList) {
+    try {
+        var room = roomManager.getRoomById(meetingId);
+        var publisher = room.getMemberById(pubId);
+        var subscriber = room.getMemberById(memberId);
+        var rejectCause = 'User ' + memberId + ' is not registered';
+        subscriber.subscribeScreen(publisher, sdpOffer, candidateList,function(success, sdpAnswer,candidateList) {
+            if (success) {
+                subscriber.sendMessage( {
+                    id: 'subscribeScreenResponse',
+                    response: 'accepted',
+                    pubId: pubId,
+                    sdpAnswer: sdpAnswer,
+                    candidateList:candidateList
+                });
+            } else {
+                subscriber.sendMessage( {
+                    id: 'subscribeScreenResponse',
+                    response: 'rejected',
+                    pubId: pubId
+                });
+            }
+        })
+    } catch (exc) {
+        console.log('Subscribe screen error ', memberId, meetingId);
+    }
+}
+
 function join(memberId, meetingId, ws) {
     roomManager.registerRoom(meetingId, function(success, room) {
         if (success) {
@@ -202,7 +307,8 @@ function join(memberId, meetingId, ws) {
                     ws.send(JSON.stringify({
                         id: 'joinResponse',
                         response: 'accepted',
-                        whiteboard:room.whiteboardBuffer
+                        presentation:room.presentationBuffer,
+                        fileShare: room.fileShare
                     }));
                     room.broadcastMember();
                 } else ws.send(JSON.stringify({
@@ -273,12 +379,22 @@ function chat(memberId, meetingId, text) {
     }
 }
 
-function whiteboard(memberId, meetingId, event,object) {
+function presentation(memberId, meetingId, event,object) {
     try {
         var room = roomManager.getRoomById(meetingId);
         var member = room.getMemberById(memberId);
-        room.broadcastWhiteboard(member,event,object);
+        room.broadcastPresentation(member,event,object);
     } catch (exc) {
-        console.log('Whiteboard error ', memberId, meetingId);
+        console.log('Presentation error ', memberId, meetingId);
+    }
+}
+
+function fileShare(memberId, meetingId, event,object) {
+    try {
+        var room = roomManager.getRoomById(meetingId);
+        var member = room.getMemberById(memberId);
+        room.broadcastFileShare(member,event,object);
+    } catch (exc) {
+        console.log('Fileshare error ', memberId, meetingId);
     }
 }
