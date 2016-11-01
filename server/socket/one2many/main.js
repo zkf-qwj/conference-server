@@ -385,7 +385,7 @@ function presentation(memberId, meetingId, event,object) {
         var member = room.getMemberById(memberId);
         room.broadcastPresentation(member,event,object);
     } catch (exc) {
-        console.log('Presentation error ', memberId, meetingId);
+        console.log('Presentation error ', memberId, meetingId, exc);
     }
 }
 

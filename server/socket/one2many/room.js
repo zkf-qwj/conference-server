@@ -71,7 +71,7 @@ Room.prototype.broadcastPresentation = function(source,event,object)
 {
     if (source.profile.role!='presenter')
         throw 'Only presenter can send presentation event';
-    this.presentationdBuffer.push({memberId:source.id,event:event,object:object}); 
+    this.presentationBuffer.push({memberId:source.id,event:event,object:object}); 
     _.each(this.memberById, function(m)
     {
         if (source.id != m.id )
