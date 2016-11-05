@@ -31,33 +31,43 @@ var security =
 var app = express();
 var apiServer = https.createServer(security,app);
 var trainingServer = https.createServer(security,app);
+var streamingServer = https.createServer(security,app);
 var conferenceServer = https.createServer(security,app);
 
-var one2manyWss = new ws.Server({
-    server : trainingServer,
-    path : '/one2many'
+var streamingWss = new ws.Server({
+    server : streamingServer,
+    path : '/streaming'
 });
 
-var many2manyWss = new ws.Server({
+var trainingWss = new ws.Server({
+    server : trainingServer,
+    path : '/training'
+});
+
+var conferenceWss = new ws.Server({
     server : conferenceServer,
-    path : '/many2many'
+    path : '/conference'
 });
 
 require('./config/express')(app);
 require('./routes')(app);
-require('./socket/one2many/main').conference(one2manyWss);
-require('./socket/many2many/main').conference(many2manyWss);
+require('./socket/streaming/main').streaming(streamingWss);
+require('./socket/training/main').training(trainingWss);
+require('./socket/conference/main').conference(conferenceWss);
 
 // Start server
 function startServer() {
   app.apiServer = apiServer.listen(config.apiPort, config.ip, function() {
-    console.log('Express server listening on %d, in %s mode', config.apiPort, app.get('env'));
+    console.log('API server listening on %d, in %s mode', config.apiPort, app.get('env'));
   });
   app.trainingServer = trainingServer.listen(config.trainingPort, config.ip, function() {
-      console.log('Express server listening on %d, in %s mode', config.trainingPort, app.get('env'));
+      console.log('Training server listening on %d, in %s mode', config.trainingPort, app.get('env'));
     });
   app.conferenceServer = conferenceServer.listen(config.conferencePort, config.ip, function() {
-      console.log('Express server listening on %d, in %s mode', config.conferencePort, app.get('env'));
+      console.log('Conference server listening on %d, in %s mode', config.conferencePort, app.get('env'));
+    });
+  app.streamingServer = streamingServer.listen(config.streamingPort, config.ip, function() {
+      console.log('Streaming server listening on %d, in %s mode', config.streamingPort, app.get('env'));
     });
 }
 
