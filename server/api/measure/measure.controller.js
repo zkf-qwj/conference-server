@@ -27,7 +27,7 @@ function upChannel(req, res) {
 
 function downChannel(req, res) {
     var array = [];
-    var arraySize = 1024*1024;
+    var arraySize = 12*1024*1024;
     var size = arraySize
     while(size--) array.push(1);
     res.json({status:true,payload:{data:array,size:arraySize}});

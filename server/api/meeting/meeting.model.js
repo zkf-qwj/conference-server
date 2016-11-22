@@ -9,7 +9,9 @@ var MeetingSchema = new mongoose.Schema({
     duration: Number,
     logoutUrl: String,
     data: Object,
-    active:Boolean
+    active:Boolean,
+    domain:String,
+    type:String
 });
 
 module.exports =  mongoose.model('Meeting', MeetingSchema);

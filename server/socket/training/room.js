@@ -66,8 +66,7 @@ Room.prototype.broadcastChat = function(source,text)
 Room.prototype.broadcastChannel = function(channel)
 {
     this.broadcastChannelList = _.reject(this.broadcastChannelList,function(ch) {
-       if ( ch.id == channel.id || (ch.source == channel.source && ch.publisherId==channel.publisherId)) {
-           ch.release();
+       if ( ch.id == channel.id || (ch.source == channel.source && ch.publisherId==channel.publisherId)) {    
            return true;
        } 
        return false;

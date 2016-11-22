@@ -97,24 +97,39 @@ function destroy(req, res) {
 }
 
 function login(req, res) {
-    
-  return Member.findOne({'meetingId':req.body.meetingId,'email':req.body.email,'password':req.body.password}).select('-password').exec()
-   .then(function(member) {
-       if (member) {
-           Member.find({'meetingId':req.body.meetingId}).select('-password').exec()
-           .then(function(memberList) {
-               Meeting.findById(req.body.meetingId).exec()
-               .then(function(meeting) {
-                   res.json({status:true,memberList:memberList,meeting:meeting,member:member});
+  if (req.body.meetingId)  
+      return Member.findOne({'meetingId':req.body.meetingId,'email':req.body.email,'password':req.body.password}).select('-password').exec()
+       .then(function(member) {
+           if (member) {
+               Member.find({'meetingId':req.body.meetingId}).select('-password').exec()
+               .then(function(memberList) {
+                   Meeting.findById(req.body.meetingId).exec()
+                   .then(function(meeting) {
+                       res.json({status:true,memberList:memberList,meeting:meeting,member:member});
+                   })
+                   .catch(handleError(res));
                })
                .catch(handleError(res));
-           })
-           .catch(handleError(res));
-       }
-       else
-           res.json({status:false});       
-   })
-   .catch(handleError(res));
+           }
+           else
+               res.json({status:false});       
+       })
+       .catch(handleError(res));
+  if (req.body.domain)  
+      return Meeting.findOne({'domain':req.body.domain}).exec()
+              .then(function(meeting) {
+                  Member.findOne({'meetingId':meeting._id,'email':req.body.email,'password':req.body.password}).select('-password').exec()
+                  .then(function(member) {
+                      if (member) {
+                          Member.find({'domain':req.body.domain}).select('-password').exec()
+                          .then(function(memberList) {
+                              res.json({status:true,memberList:memberList,meeting:meeting,member:member});
+                          })
+                      }
+                  });
+              })  
+              .catch(handleError(res));
+   
 }
 
 

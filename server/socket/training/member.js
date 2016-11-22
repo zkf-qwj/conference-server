@@ -67,8 +67,8 @@ RoomMember.prototype.onDiscussion =  function() {
 }
 
 RoomMember.prototype.offDiscussion =  function() {
-    var channel = _.find(this.channelList,function(item) {
-       return item.source =='webcam';
+    var channel = _.find(this.channelList,function(ch) {
+       return ch.source =='webcam';
     });    
      this.room.unbroadcastChannel(channel);
 }
