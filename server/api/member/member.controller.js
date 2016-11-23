@@ -121,7 +121,7 @@ function login(req, res) {
                   Member.findOne({'meetingId':meeting._id,'email':req.body.email,'password':req.body.password}).select('-password').exec()
                   .then(function(member) {
                       if (member) {
-                          Member.find({'domain':req.body.domain}).select('-password').exec()
+                          Member.find({'meetingId':meeting._id}).select('-password').exec()
                           .then(function(memberList) {
                               res.json({status:true,memberList:memberList,meeting:meeting,member:member});
                           })
