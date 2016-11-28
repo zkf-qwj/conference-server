@@ -45,7 +45,7 @@ function getKurentoClient(callback)
 }
 
 
-Subscription.prototype.subscribe = function(channel, sdpOffer, candidateList,callback)
+Subscription.prototype.subscribe = function(channel, sdpOffer, candidateList,bitrate,callback)
 {
     var self = this;
     getKurentoClient(function(error, kurentoClient)
@@ -70,41 +70,49 @@ Subscription.prototype.subscribe = function(channel, sdpOffer, candidateList,cal
             }
             console.log('Create WebRtcEndpoint for subscription'+self.id +' channel:' + channel.id +' successfully');
             self.subWebRtcEndpoint =  subWebRtcEndpoint;
-           
-            subWebRtcEndpoint.processOffer(sdpOffer, function(error, sdpAnswer)
-            {
+            
+            self.subWebRtcEndpoint.setMaxVideoSendBandwidth(bitrate,function(error) {
                 if (error)
-                {
-                    console.log('Subscriber'+self.id +' fail to process offer , channel ',channel.id );
-                    console.log(error)
-                    return callback(false);;
+                { 
+                    console.log('Set bitrate for subscription '+self.id +' channel:' + channel.id +' error');
+                    return callback(false);
                 }
-                console.log('Process offer for subscriber'+self.id +' channel:' + channel.id +' successfully');
-                _.each(candidateList,function(_candidate) {
-                    var candidate = kurento.getComplexType('IceCandidate')(_candidate);
-                    self.subWebRtcEndpoint.addIceCandidate(candidate);
-                });
-                self.subCandidateSendQueue = [];
-                subWebRtcEndpoint.on('OnIceCandidate', function(event)
-                {
-                    console.log('Subscription  ' + self.id+': save local candidate',new Date());
-                    self.subCandidateSendQueue.push(event.candidate);
-                });
-                subWebRtcEndpoint.on('OnIceGatheringDone', function(event)
-                {
-                    console.log('Subscription  ' + self.id+': complete gather candidate');
-                    callback(true, sdpAnswer,self.subCandidateSendQueue);
-                });
-                subWebRtcEndpoint.gatherCandidates(function(error)
+                subWebRtcEndpoint.processOffer(sdpOffer, function(error, sdpAnswer)
                 {
                     if (error)
                     {
+                        console.log('Subscriber'+self.id +' fail to process offer , channel ',channel.id );
                         console.log(error)
-                        console.log('Subscriber'+self.id +' fail to gather candidate , channel ',channel.id );
-                        return callback(false);
+                        return callback(false);;
                     }
+                    console.log('Process offer for subscriber'+self.id +' channel:' + channel.id +' successfully');
+                    _.each(candidateList,function(_candidate) {
+                        var candidate = kurento.getComplexType('IceCandidate')(_candidate);
+                        self.subWebRtcEndpoint.addIceCandidate(candidate);
+                    });
+                    self.subCandidateSendQueue = [];
+                    subWebRtcEndpoint.gatherCandidates(function(error)
+                    {
+                        if (error)
+                        {
+                            console.log(error)
+                            console.log('Subscriber'+self.id +' fail to gather candidate , channel ',channel.id );
+                            return callback(false);
+                        }
+                    });
                 });
             });
+            subWebRtcEndpoint.on('OnIceCandidate', function(event)
+            {
+                console.log('Subscription  ' + self.id+': save local candidate',new Date());
+                self.subCandidateSendQueue.push(event.candidate);
+            });
+            subWebRtcEndpoint.on('OnIceGatheringDone', function(event)
+            {
+                console.log('Subscription  ' + self.id+': complete gather candidate');
+                callback(true, sdpAnswer,self.subCandidateSendQueue);
+            });
+                    
         });
     })
 }

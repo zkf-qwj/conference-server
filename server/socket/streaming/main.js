@@ -42,10 +42,10 @@ module.exports = {
                 console.log('Streaming Connection ' + sessionId + ' received message ', message.id);
                 switch (message.id) {
                     case 'publish':
-                        publish(ws,sessionId,message.publisherId,message.source,message.sdpOffer,message.candidateList);
+                        publish(ws,sessionId,message.publisherId,message.source,message.sdpOffer,message.candidateList,message.bitrate);
                         break;
                     case 'subscribe':
-                        subscribe(ws,sessionId,message.channelId, message.sdpOffer,message.candidateList);
+                        subscribe(ws,sessionId,message.channelId, message.sdpOffer,message.candidateList,message.bitrate);
                         break;
                     case 'unpublish':
                         unpublish(message.channelId);
@@ -98,10 +98,10 @@ function stop(sessionId) {
     subscriptionManager.releaseSubInSession(sessionId);
 }
 
-function publish(ws,sessionId, publisherId,source,sdpOffer,candidateList) {
+function publish(ws,sessionId, publisherId,source,sdpOffer,candidateList,bitrate) {
     try {
         var channel = new Channel(sessionId,source);
-        channel.publish(sdpOffer,candidateList, function(success, sdpAnswer,candidateList) {
+        channel.publish(sdpOffer,candidateList,bitrate, function(success, sdpAnswer,candidateList) {
             if (success) {
                 channelManager.registerChannel(channel);
                 console.log('Register channel success', channel.id);
@@ -128,11 +128,11 @@ function publish(ws,sessionId, publisherId,source,sdpOffer,candidateList) {
     }
 }
 
-function subscribe(ws,sessionId,channelId, sdpOffer,candidateList) {
+function subscribe(ws,sessionId,channelId, sdpOffer,candidateList,bitrate) {
     try {
         var subscription = new Subscription(sessionId);
         var channel = channelManager.getChannelById(channelId);
-        subscription.subscribe(channel, sdpOffer, candidateList,function(success, sdpAnswer,candidateList) {
+        subscription.subscribe(channel, sdpOffer, candidateList,bitrate,function(success, sdpAnswer,candidateList) {
             if (success) {
                 subscriptionManager.registerSub(subscription);
                 ws.send(JSON.stringify( {
