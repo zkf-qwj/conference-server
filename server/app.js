@@ -31,12 +31,12 @@ var security =
 var app = express();
 var apiServer = https.createServer(security,app);
 var trainingServer = https.createServer(security,app);
-var streamingServer = https.createServer(security,app);
+var one2manyServer = https.createServer(security,app);
 var conferenceServer = https.createServer(security,app);
 
-var streamingWss = new ws.Server({
-    server : streamingServer,
-    path : '/streaming'
+var one2manyWss = new ws.Server({
+    server : one2manyServer,
+    path : '/one2many'
 });
 
 var trainingWss = new ws.Server({
@@ -51,7 +51,7 @@ var conferenceWss = new ws.Server({
 
 require('./config/express')(app);
 require('./routes')(app);
-require('./socket/streaming/main').streaming(streamingWss);
+require('./socket/one2many/main').one2many(one2manyWss);
 require('./socket/training/main').training(trainingWss);
 require('./socket/conference/main').conference(conferenceWss);
 
@@ -66,8 +66,8 @@ function startServer() {
   app.conferenceServer = conferenceServer.listen(config.conferencePort, config.ip, function() {
       console.log('Conference server listening on %d, in %s mode', config.conferencePort, app.get('env'));
     });
-  app.streamingServer = streamingServer.listen(config.streamingPort, config.ip, function() {
-      console.log('Streaming server listening on %d, in %s mode', config.streamingPort, app.get('env'));
+  app.one2manyServer = one2manyServer.listen(config.one2manyPort, config.ip, function() {
+      console.log('one2many server listening on %d, in %s mode', config.one2manyPort, app.get('env'));
     });
 }
 

@@ -118,8 +118,10 @@ function login(req, res) {
   if (req.body.domain)  
       return Meeting.findOne({'domain':req.body.domain}).exec()
               .then(function(meeting) {
+                  console.log(meeting);
                   Member.findOne({'meetingId':meeting._id,'email':req.body.email,'password':req.body.password}).select('-password').exec()
                   .then(function(member) {
+                      console.log(member);
                       if (member) {
                           Member.find({'meetingId':meeting._id}).select('-password').exec()
                           .then(function(memberList) {

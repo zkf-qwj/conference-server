@@ -19,7 +19,7 @@ function nextUniqueId() {
 }
 
 module.exports = {
-    streaming: function(wss) {
+    one2many: function(wss) {
         wss.on('connection', function(ws) {
             var sessionId = nextUniqueId();
             console.log('Streaming Connection received with sessionId ' + sessionId);

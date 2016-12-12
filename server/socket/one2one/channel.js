@@ -119,17 +119,17 @@ Channel.prototype.publish = function(sdpOffer,candidateList, bitrate,callback)
                                 return callback(false);;
                             }
                         });
+                        pubWebRtcEndpoint.on('OnIceCandidate', function(event)
+                        {
+                            console.log('Channel  ' + self.id+': save local candidate', new Date());
+                            self.pubCandidateSendQueue.push(event.candidate);
+                        });
+                        pubWebRtcEndpoint.on('OnIceGatheringDone', function(event)
+                        {
+                            console.log('Channel'+self.id +' complete gather candidate' );
+                            callback(true, sdpAnswer,self.pubCandidateSendQueue);
+                        });
                     });
-                });
-                pubWebRtcEndpoint.on('OnIceCandidate', function(event)
-                {
-                    console.log('Channel  ' + self.id+': save local candidate', new Date());
-                    self.pubCandidateSendQueue.push(event.candidate);
-                });
-                pubWebRtcEndpoint.on('OnIceGatheringDone', function(event)
-                {
-                    console.log('Channel'+self.id +' complete gather candidate' );
-                    callback(true, sdpAnswer,self.pubCandidateSendQueue);
                 });
             });
         });

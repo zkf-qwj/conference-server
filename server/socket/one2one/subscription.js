@@ -100,19 +100,18 @@ Subscription.prototype.subscribe = function(channel, sdpOffer, candidateList,bit
                             return callback(false);
                         }
                     });
+                    subWebRtcEndpoint.on('OnIceCandidate', function(event)
+                    {
+                        console.log('Subscription  ' + self.id+': save local candidate',new Date());
+                        self.subCandidateSendQueue.push(event.candidate);
+                    });
+                    subWebRtcEndpoint.on('OnIceGatheringDone', function(event)
+                    {
+                        console.log('Subscription  ' + self.id+': complete gather candidate');
+                        callback(true, sdpAnswer,self.subCandidateSendQueue);
+                    });
                 });
             });
-            subWebRtcEndpoint.on('OnIceCandidate', function(event)
-            {
-                console.log('Subscription  ' + self.id+': save local candidate',new Date());
-                self.subCandidateSendQueue.push(event.candidate);
-            });
-            subWebRtcEndpoint.on('OnIceGatheringDone', function(event)
-            {
-                console.log('Subscription  ' + self.id+': complete gather candidate');
-                callback(true, sdpAnswer,self.subCandidateSendQueue);
-            });
-                    
         });
     })
 }

@@ -23,9 +23,11 @@ var all = {
 
   // Server port
   apiPort: process.env.API_PORT || 9444,
-  streamingPort: process.env.STREAMING_PORT || 9445,
+  one2manyPort: process.env.STREAMING_PORT || 9445,
   trainingPort: process.env.TRAINING_PORT || 9446,
   conferencePort: process.env.CONFERENCE_PORT || 9447,
+  many2manyPort: process.env.STREAMING_PORT || 9448,
+  one2onePort: process.env.STREAMING_PORT || 9449,
 
   // Server IP
   ip: process.env.IP || '0.0.0.0',
