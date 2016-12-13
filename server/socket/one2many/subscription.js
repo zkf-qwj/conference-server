@@ -15,7 +15,7 @@ function getKurentoClient(callback)
     {
         if (error)
         {
-            var message = 'Coult not find media server at address ' + argv.ws_uri;
+            console.log( 'Coult not find media server at address ' + argv.ws_uri);
             callback(null);
         } 
         else
@@ -55,7 +55,7 @@ Subscription.prototype.release = function() {
 Subscription.prototype.subscribe = function(channel, sdpOffer, candidateList,bitrate,callback)
 {
     var self = this;
-    getKurentoClient(function(error, kurentoClient)
+    getKurentoClient(function( kurentoClient)
     {
         if (!kurentoClient)
         {

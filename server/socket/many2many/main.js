@@ -7,6 +7,8 @@ var Conversation = require('./conversation');
 var Party = require('./party');
 var ConversationManager = require('./conversation_manager');
 var convManager = new ConversationManager();
+var convMap = {};
+
 /*
  * Global variable
  */
@@ -39,10 +41,10 @@ module.exports = {
                 }
                 console.log('Streaming Connection ' + sessionId + ' received message ', message.id);
                 switch (message.id) {
-                    case 'call':
-                        publish(ws,sessionId,message.groupId,message.partyId,message.sdpOffer,message.candidateList,message.bitrate);
+                    case 'connect':
+                        connect(ws,sessionId,message.groupId,message.partyId,message.sdpOffer,message.candidateList,message.bitrate);
                         break;
-                    case 'stop':
+                    case 'disconnect':
                         stop(sessionId);
                         break;
                     default:
@@ -59,37 +61,38 @@ module.exports = {
 
 
 function stop(sessionId) {
-    channelManager.releaseChannelInSession(sessionId);
-    subscriptionManager.releaseSubInSession(sessionId);
+    var conversation = convMap[sessionId];
+    if (conversation) {
+        conversation.removePartyInSession(sessionId);
+        if (conversation.partyById.length==0)
+            convManager.releaseConversation(conversation.id)
+    }
 }
 
-function publish(ws,sessionId, publisherId,source,sdpOffer,candidateList,bitrate) {
+function connect(ws,sessionId, groupId,partyId,sdpOffer,candidateList,bitrate) {
     try {
-        var channel = new Channel(sessionId,source);
-        channel.publish(sdpOffer,candidateList,bitrate, function(success, sdpAnswer,candidateList) {
-            if (success) {
-                channelManager.registerChannel(channel);
-                console.log('Register channel success', channel.id);
-                ws.send(JSON.stringify({
-                    id: 'publishResponse',
-                    response: 'accepted',
-                    channelId:channel.id,
-                    publisherId:publisherId,
-                    source:source,
-                    sdpAnswer: sdpAnswer,
-                    candidateList:candidateList
-                }));
-            } else {
-                ws.send(JSON.stringify({
-                    id: 'publishResponse',
-                    response: 'rejected',
-                    source:source,
-                    publisherId:publisherId
-                }));
-            }
-        })
+        convManager.getConversation(groupId,function(conversation) {
+            convMap[sessionId] = conversation;
+            var party = new Party(partyId,sessionId);
+            party.join(sdpOffer,candidateList,bitrate, function(success, sdpAnswer,candidateList) {
+                if (success) {
+                    ws.send(JSON.stringify({
+                        id: 'connectResponse',
+                        response: 'accepted',
+                        sdpAnswer: sdpAnswer,
+                        candidateList:candidateList
+                    }));
+                } else {
+                    ws.send(JSON.stringify({
+                        id: 'connectResponse',
+                        response: 'rejected',
+                    }));
+                }
+            })
+        });
+       
     } catch (exc) {
-        console.log('Publish error ', sessionId, publisherId);
+        console.log('Connect error ', sessionId, partyId);
     }
 }
 
