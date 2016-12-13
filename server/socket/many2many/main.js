@@ -19,16 +19,16 @@ function nextUniqueId() {
 }
 
 module.exports = {
-    one2many: function(wss) {
+    many2many: function(wss) {
         wss.on('connection', function(ws) {
             var sessionId = nextUniqueId();
-            console.log('Streaming Connection received with sessionId ' + sessionId);
+            console.log('Many2Many Connection received with sessionId ' + sessionId);
             ws.on('error', function(error) {
-                console.log('Streaming Connection ' + sessionId + ' error');
+                console.log('Many2Many Connection ' + sessionId + ' error');
                 stop(sessionId);
             });
             ws.on('close', function() {
-                console.log('Streaming Connection ' + sessionId + ' closed');
+                console.log('Many2Many Connection ' + sessionId + ' closed');
                 stop(sessionId);
             });
             ws.on('message', function(_message) {
@@ -39,7 +39,7 @@ module.exports = {
                     console.log('Corrupted JSON message ' + _message);
                     return;
                 }
-                console.log('Streaming Connection ' + sessionId + ' received message ', message.id);
+                console.log('Many2Many Connection ' + sessionId + ' received message ', message.id);
                 switch (message.id) {
                     case 'connect':
                         connect(ws,sessionId,message.groupId,message.partyId,message.sdpOffer,message.candidateList,message.bitrate);
@@ -74,7 +74,7 @@ function connect(ws,sessionId, groupId,partyId,sdpOffer,candidateList,bitrate) {
         convManager.getConversation(groupId,function(conversation) {
             convMap[sessionId] = conversation;
             var party = new Party(partyId,sessionId);
-            party.join(sdpOffer,candidateList,bitrate, function(success, sdpAnswer,candidateList) {
+            party.join(conversation,sdpOffer,candidateList,bitrate, function(success, sdpAnswer,candidateList) {
                 if (success) {
                     ws.send(JSON.stringify({
                         id: 'connectResponse',

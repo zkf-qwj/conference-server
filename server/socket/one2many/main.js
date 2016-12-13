@@ -39,7 +39,7 @@ module.exports = {
                     console.log('Corrupted JSON message ' + _message);
                     return;
                 }
-                console.log('Streaming Connection ' + sessionId + ' received message ', message.id);
+                console.log('One2Many Connection ' + sessionId + ' received message ', message.id);
                 switch (message.id) {
                     case 'publish':
                         publish(ws,sessionId,message.publisherId,message.source,message.sdpOffer,message.candidateList,message.bitrate);

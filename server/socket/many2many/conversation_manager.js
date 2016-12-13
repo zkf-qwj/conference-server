@@ -73,10 +73,12 @@ function ConversationManager()
 ConversationManager.prototype.getConversation = function(id,callback)
 {
     var self = this;
-    if (this.conversationById[id])
+    if (this.conversationById[id]) {
+        console.log('Existing conversation');
         callback(this.conversationById[id]);
+    }
     else {
-        conversation =  Conversation(id);    
+        conversation = new Conversation(id);    
         getKurentoClient(function( kurentoClient)
         {
             if (!kurentoClient)

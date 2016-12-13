@@ -32,11 +32,17 @@ var app = express();
 var apiServer = https.createServer(security,app);
 var trainingServer = https.createServer(security,app);
 var one2manyServer = https.createServer(security,app);
+var many2manyServer = https.createServer(security,app);
 var conferenceServer = https.createServer(security,app);
 
 var one2manyWss = new ws.Server({
     server : one2manyServer,
     path : '/one2many'
+});
+
+var many2manyWss = new ws.Server({
+    server : many2manyServer,
+    path : '/many2many'
 });
 
 var trainingWss = new ws.Server({
@@ -52,6 +58,7 @@ var conferenceWss = new ws.Server({
 require('./config/express')(app);
 require('./routes')(app);
 require('./socket/one2many/main').one2many(one2manyWss);
+require('./socket/many2many/main').many2many(many2manyWss);
 require('./socket/training/main').training(trainingWss);
 require('./socket/conference/main').conference(conferenceWss);
 
@@ -68,6 +75,9 @@ function startServer() {
     });
   app.one2manyServer = one2manyServer.listen(config.one2manyPort, config.ip, function() {
       console.log('one2many server listening on %d, in %s mode', config.one2manyPort, app.get('env'));
+    });
+  app.many2manyServer = many2manyServer.listen(config.many2manyPort, config.ip, function() {
+      console.log('many2many server listening on %d, in %s mode', config.many2manyPort, app.get('env'));
     });
 }
 
