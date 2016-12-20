@@ -161,13 +161,13 @@ function chat(memberId, meetingId, text) {
     }
 }
 
-function shareScreen(meetingId,channelId) {
+function shareScreen(screenChannel) {
     try {
         var room = roomManager.getRoomById(meetingId);
-        room.screenChannelId =  channelId;
-        room.broadcastScreenChannel(memberId,channelId)
+        room.screenChannel =  screenChannel;
+        room.broadcastScreenChannel(screenChannel)
     } catch (exc) {
-        console.log('Share screen error ', memberId, meetingId);
+        console.log('Share screen error ',screenChannel);
     }
 }
 

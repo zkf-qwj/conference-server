@@ -9,7 +9,7 @@ function Room(id)
     this.presentationBuffer = [];
     this.fileShare = [];
     this.livePresenterId = null;
-    this.screenChannelId = null;
+    this.screenChannel = null;
 }
 
 Room.prototype.registerMember = function(id,ws,callback)
@@ -62,7 +62,7 @@ Room.prototype.broadcastChat = function(source,text)
             });
 }
 
-Room.prototype.broadcastScreenChannel = function(memberId,channelId)
+Room.prototype.broadcastScreenChannel = function(screenChannel)
 {
     _.each(this.memberById, function(m)
             {
@@ -71,8 +71,7 @@ Room.prototype.broadcastScreenChannel = function(memberId,channelId)
                     m.ws.send(JSON.stringify(
                     {
                         id: 'shareScreen',
-                        memberId: memberId,
-                        channelId: channelId
+                        channel: screenChannel
                     }));
                 }
                 catch (exception)
