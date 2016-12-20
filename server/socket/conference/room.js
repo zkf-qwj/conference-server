@@ -9,6 +9,7 @@ function Room(id)
     this.presentationBuffer = [];
     this.fileShare = [];
     this.livePresenterId = null;
+    this.screenChannelId = null;
 }
 
 Room.prototype.registerMember = function(id,ws,callback)
@@ -52,6 +53,26 @@ Room.prototype.broadcastChat = function(source,text)
                         id: 'chat',
                         user: source.profile.name,
                         text: text
+                    }));
+                }
+                catch (exception)
+                {
+                    console.log(exception);
+                }
+            });
+}
+
+Room.prototype.broadcastScreenChannel = function(memberId,channelId)
+{
+    _.each(this.memberById, function(m)
+            {
+                try
+                {
+                    m.ws.send(JSON.stringify(
+                    {
+                        id: 'shareScreen',
+                        memberId: memberId,
+                        channelId: channelId
                     }));
                 }
                 catch (exception)

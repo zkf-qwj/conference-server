@@ -61,6 +61,9 @@ module.exports = {
                     case 'presentGrant':
                         grantPresent(message.memberId, message.meetingId,message.livePresenterId);
                         break;
+                    case 'shareScreen':
+                        shareScreen(message.channelId);
+                        break;
                     case 'fileShare':
                         fileShare(message.memberId, message.meetingId,message.event,message.object);
                         break;
@@ -155,6 +158,16 @@ function chat(memberId, meetingId, text) {
         room.broadcastChat(member, text)
     } catch (exc) {
         console.log('Chat error ', memberId, meetingId);
+    }
+}
+
+function shareScreen(meetingId,channelId) {
+    try {
+        var room = roomManager.getRoomById(meetingId);
+        room.screenChannelId =  channelId;
+        room.broadcastScreenChannel(memberId,channelId)
+    } catch (exc) {
+        console.log('Share screen error ', memberId, meetingId);
     }
 }
 
