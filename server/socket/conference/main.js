@@ -61,6 +61,9 @@ module.exports = {
                     case 'presentGrant':
                         grantPresent(message.memberId, message.meetingId,message.livePresenterId);
                         break;
+                    case 'presentRelease':
+                        releasePresent(message.memberId, message.meetingId,message.livePresenterId);
+                        break;
                     case 'shareScreen':
                         shareScreen(message.channelId);
                         break;
@@ -148,6 +151,19 @@ function grantPresent(memberId, meetingId,livePresenterId) {
         }
     } catch (exc) {
         console.log('Grant present error ', memberId, meetingId);
+    }
+}
+
+function releasePresent(memberId, meetingId,livePresenterId) {
+    try {
+        var room = roomManager.getRoomById(meetingId);
+        var currentPresenter = room.getMemberById(livePresenterId);
+        if (currentPresenter) {
+            currentPresenter.releasePresent();
+            romm.livePresenterId = null;
+        }
+    } catch (exc) {
+        console.log('Release present error ', memberId, meetingId);
     }
 }
 
