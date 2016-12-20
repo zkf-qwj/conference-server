@@ -29,6 +29,8 @@ Party.prototype.release = function() {
     console.log("Release resoure for party" + this.id);
     if (this.webRtcEndpoint) 
         this.webRtcEndpoint.release();
+    if (this.port) 
+        this.port.release();
 }
 
 

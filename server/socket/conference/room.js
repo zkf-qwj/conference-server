@@ -8,7 +8,7 @@ function Room(id)
     this.memberById = {};
     this.presentationBuffer = [];
     this.fileShare = [];
-    this.broadcastChannelList = [];
+    this.livePresenterId = null;
 }
 
 Room.prototype.registerMember = function(id,ws,callback)
@@ -59,74 +59,6 @@ Room.prototype.broadcastChat = function(source,text)
                     console.log(exception);
                 }
             });
-}
-
-Room.prototype.broadcastChannel = function(channel)
-{
-    var self = this;
-    this.broadcastChannelList.push(channel);
-    _.each(this.memberById, function(m)
-            {
-                try
-                {
-                    m.ws.send(JSON.stringify(
-                    {
-                        id: 'broadcastChannel',
-                        channelList: self.broadcastChannelList
-                    }));
-                }
-                catch (exception)
-                {
-                    console.log(exception);
-                }
-            });
-}
-
-
-Room.prototype.unbroadcastChannel = function(channel)
-{
-    var self = this;
-    this.broadcastChannelList = _.reject(this.broadcastChannelList ,function(item) {
-       return item.id == channel.id; 
-    });
-    _.each(this.memberById, function(m)
-        {
-            try
-            {
-                m.ws.send(JSON.stringify(
-                {
-                    id: 'broadcastChannel',
-                    channelList: self.broadcastChannelList
-                }));
-            }
-            catch (exception)
-            {
-                console.log(exception);
-            }
-        });
-}
-
-Room.prototype.unbroadcastPublisher = function(publisher)
-{
-    var self = this;
-    this.broadcastChannelList = _.reject(this.broadcastChannelList ,function(item) {
-       return item.publisherId == publisher.id; 
-    });
-    _.each(this.memberById, function(m)
-        {
-            try
-            {
-                m.ws.send(JSON.stringify(
-                {
-                    id: 'broadcastChannel',
-                    channelList: self.broadcastChannelList
-                }));
-            }
-            catch (exception)
-            {
-                console.log(exception);
-            }
-        });
 }
 
 Room.prototype.broadcastPresentation = function(source,event,object)

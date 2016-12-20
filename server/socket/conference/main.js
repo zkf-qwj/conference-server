@@ -46,12 +46,6 @@ module.exports = {
                     case 'join':
                         join(message.memberId, message.meetingId, ws);
                         break;
-                    case 'registerChannel':
-                        registerChannel(message.memberId, message.meetingId,message.channel);
-                        break;
-                    case 'unregisterChannel':
-                        unregisterChannel(message.memberId, message.meetingId,message.channel);
-                        break;
                     case 'end':
                         end(message.meetingId);
                         break;
@@ -63,6 +57,9 @@ module.exports = {
                         break;
                     case 'chat':
                         chat(message.memberId, message.meetingId, message.text);
+                        break;
+                    case 'presentGrant':
+                        grantPresent(message.memberId, message.meetingId,message.livePresenterId);
                         break;
                     case 'fileShare':
                         fileShare(message.memberId, message.meetingId,message.event,message.object);
@@ -79,26 +76,6 @@ module.exports = {
                 }
             });
         });
-    }
-}
-
-function registerChannel(memberId, meetingId,channel) {
-    try {
-        var room = roomManager.getRoomById(meetingId);
-        var publisher = room.getMemberById(memberId);
-        publisher.registerChannel(channel);
-    } catch (exc) {
-        console.log('Register channel error ', memberId, meetingId,channel);
-    }
-}
-
-function unregisterChannel(memberId, meetingId,channel) {
-    try {
-        var room = roomManager.getRoomById(meetingId);
-        var publisher = room.getMemberById(memberId);
-        publisher.unregisterChannel(channel);
-    } catch (exc) {
-        console.log('Register channel error ', memberId, meetingId,channel);
     }
 }
 
@@ -153,6 +130,22 @@ function join(memberId, meetingId, ws) {
 
 function end(meetingId) {
     roomManager.unregisterRoom(meetingId);
+}
+
+
+
+function grantPresent(memberId, meetingId,livePresenterId) {
+    try {
+        var room = roomManager.getRoomById(meetingId);
+        var newPresenter = room.getMemberById(livePresenterId);
+        newPresenter.grantPresent();
+        if (room.livePresenterId) {
+            var oldPresenter = room.getMemberById(room.livePresenterId);
+            oldPresenter.releasePresent();
+        }
+    } catch (exc) {
+        console.log('Grant present error ', memberId, meetingId);
+    }
 }
 
 function chat(memberId, meetingId, text) {

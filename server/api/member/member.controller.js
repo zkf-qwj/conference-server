@@ -1,8 +1,10 @@
 'use strict';
 
 var jsonpatch =require( 'fast-json-patch');
+var config = require('../../config/environment');
 var Member = require('./member.model');
 var Meeting = require('../meeting/meeting.model');
+var sha1 = require('sha1');
 
 function handleError(res, statusCode) {
   statusCode = statusCode || 500;
@@ -17,6 +19,7 @@ module.exports = {
         create:create,
         update:update,
         login:login,
+        invite:invite,
         remove:destroy,
         trustLogin:trustLogin
 }
@@ -70,6 +73,52 @@ function create(req, res) {
    })
    .catch(handleError(res));
   
+}
+
+
+
+//Invite a new Member in the DB
+function invite(req, res) {
+    var member = JSON.parse(req.body.member);
+    member.meetingId = req.body.meetingId;
+    console.log(member);
+    return  Meeting.findById(req.body.meetingId).exec()
+    .then(function(meeting) {       
+        if (meeting) {
+            return  Member.findOne({'email':member.email,'meetingId':member.meetingId}).exec()
+            .then(function(entity){
+                if (!entity) 
+                {
+                    Member.create(member)
+                    .then(function(entity){
+                        var payload = {
+                                memberId:entity._id,
+                                meetingId:req.body.meetingId
+                        }
+                        var payload_encode = new Buffer(JSON.stringify(payload)).toString("base64");
+                        var checksum = sha1(payload_encode+config.secrets.api);
+                        var urlLink = url.format({
+                            protocol: req.protocol,
+                            hostname: config.hostname,
+                            port: config.apiPort,
+                            pathname: '/#/trustedlogin/',
+                            query: {
+                                payload:payload_encode,
+                                checksum:checksum
+                            }
+                          });
+                        res.json({'link':urlLink,status:true});
+                    });
+                }
+            })
+          .catch(handleError(res));
+        } else {
+            console.log('Invalid meetingId', member.meetingId );
+            res.json({status:false});
+        }
+    })
+    .catch(handleError(res));
+
 }
 
 // Upserts the given Member in the DB at the specified ID

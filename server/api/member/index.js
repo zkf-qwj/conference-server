@@ -12,4 +12,5 @@ router.put('/',auth.isAuthenticated(), controller.update);
 router.delete('/',auth.isAuthenticated(), controller.remove);
 router.get('/info',auth.isAuthenticated(), controller.info);
 router.post('/login', controller.login);
+router.post('/invite', controller.invite);
 module.exports = router;
