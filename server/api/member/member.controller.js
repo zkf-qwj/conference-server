@@ -5,6 +5,7 @@ var config = require('../../config/environment');
 var Member = require('./member.model');
 var Meeting = require('../meeting/meeting.model');
 var sha1 = require('sha1');
+var url = require('url');
 
 function handleError(res, statusCode) {
   statusCode = statusCode || 500;
