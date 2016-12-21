@@ -83,7 +83,7 @@ Room.prototype.broadcastScreenChannel = function(screenChannel)
 
 Room.prototype.broadcastPresentation = function(source,event,object)
 {
-    if (source.profile.role!='presenter' || source.id != this.livePresenterId)
+    if (source.profile.role!='presenter' && source.id != this.livePresenterId)
         throw 'Only presenter can send presentation event';
     this.presentationBuffer.push({memberId:source.id,event:event,object:object}); 
     _.each(this.memberById, function(m)
@@ -107,7 +107,7 @@ Room.prototype.broadcastPresentation = function(source,event,object)
 
 Room.prototype.broadcastFileShare = function(source,event,object)
 {
-    if (source.profile.role!='presenter' || source.id != this.livePresenterId)
+    if (source.profile.role!='presenter' && source.id != this.livePresenterId)
         throw 'Only presenter can send fileshare event';
     this.fileShare.push({memberId:source.id,event:event,object:object}); 
     _.each(this.memberById, function(m)
