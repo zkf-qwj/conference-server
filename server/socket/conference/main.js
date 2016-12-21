@@ -58,10 +58,10 @@ module.exports = {
                     case 'chat':
                         chat(message.memberId, message.meetingId, message.text);
                         break;
-                    case 'presentGrant':
+                    case 'grantPresent':
                         grantPresent(message.memberId, message.meetingId,message.livePresenterId);
                         break;
-                    case 'presentRelease':
+                    case 'releasePresent':
                         releasePresent(message.memberId, message.meetingId,message.livePresenterId);
                         break;
                     case 'shareScreen':
