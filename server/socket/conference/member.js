@@ -36,7 +36,6 @@ RoomMember.prototype.releasePresent =  function() {
 }
 
 RoomMember.prototype.leave = function() {
-    this.room.unbroadcastPublisher(this);    
 }
 
 

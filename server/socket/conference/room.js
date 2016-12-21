@@ -70,7 +70,7 @@ Room.prototype.broadcastScreenChannel = function(screenChannel)
                 {
                     m.ws.send(JSON.stringify(
                     {
-                        id: 'shareScreen',
+                        id: 'screenShare',
                         channel: screenChannel
                     }));
                 }

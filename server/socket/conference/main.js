@@ -65,7 +65,7 @@ module.exports = {
                         releasePresent(message.memberId, message.meetingId,message.livePresenterId);
                         break;
                     case 'shareScreen':
-                        shareScreen(message.channelId);
+                        shareScreen(message.meetingId,message.channel);
                         break;
                     case 'fileShare':
                         fileShare(message.memberId, message.meetingId,message.event,message.object);
@@ -87,6 +87,7 @@ module.exports = {
 
 function leave(memberId, meetingId) {
     try {
+        console.log(memberId,meetingId);
         var room = roomManager.getRoomById(meetingId);
         var member = room.getMemberById(memberId);
         member.leave();
@@ -177,7 +178,7 @@ function chat(memberId, meetingId, text) {
     }
 }
 
-function shareScreen(screenChannel) {
+function shareScreen(meetingId,screenChannel) {
     try {
         var room = roomManager.getRoomById(meetingId);
         room.screenChannel =  screenChannel;

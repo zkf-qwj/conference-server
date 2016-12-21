@@ -7,7 +7,6 @@ var Conversation = require('./conversation');
 var Party = require('./party');
 var ConversationManager = require('./conversation_manager');
 var convManager = new ConversationManager();
-var convMap = {};
 
 /*
  * Global variable
@@ -61,19 +60,21 @@ module.exports = {
 
 
 function stop(sessionId) {
-    var conversation = convMap[sessionId];
-    if (conversation) {
+    for (var groupId in convManager.conversationById) {
+        var conversation = convManager.conversationById[groupId];
         conversation.removePartyInSession(sessionId);
-        if (conversation.partyById.length==0)
+        if (Object.keys(conversation.partyById).length == 0) {
             convManager.releaseConversation(conversation.id)
+        }
     }
+    
 }
 
 function connect(ws,sessionId, groupId,partyId,sdpOffer,candidateList,bitrate) {
     try {
         convManager.getConversation(groupId,function(conversation) {
-            convMap[sessionId] = conversation;
             var party = new Party(partyId,sessionId);
+            conversation.registerParty(party);
             party.join(conversation,sdpOffer,candidateList,bitrate, function(success, sdpAnswer,candidateList) {
                 if (success) {
                     ws.send(JSON.stringify({

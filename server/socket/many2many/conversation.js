@@ -32,6 +32,10 @@ Conversation.prototype.release = function() {
         this.composite.release();
 }
 
+Conversation.prototype.registerParty = function(party) {
+    this.partyById[party.id] = party;  
+}
+
 Conversation.prototype.removeParty = function(id) {
     var party = this.partyById[id];
     try {
@@ -46,10 +50,16 @@ Conversation.prototype.removeParty = function(id) {
 
 Conversation.prototype.removePartyInSession = function(sessionId)
 {
-    _.pairs(this.partyById,function(id,party) {
-        if (party.sessionId==sessionId)
+    console.log('removePartyInSession',sessionId);
+    for (var id in this.partyById) {
+        console.log(id)
+        var party = this.partyById[id];
+        console.log(party.sessionId);
+        if (party.sessionId==sessionId) {
             this.removeParty(id);
-    });
+        }
+    }
+   
 }
 
 

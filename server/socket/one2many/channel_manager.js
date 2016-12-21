@@ -32,10 +32,12 @@ ChannelManager.prototype.getChannelById = function(id)
 
 ChannelManager.prototype.releaseChannelInSession = function(sessionId)
 {
-    _.pairs(this.channelById,function(id,channel) {
-        if (channel.sessionId==sessionId)
+    for (var id in this.channelById) {
+        var channel = this.channelById[id];
+        if (channel.sessionId==sessionId) {
             this.releaseChannel(id);
-    });
+        }
+    }
 }
 
 
