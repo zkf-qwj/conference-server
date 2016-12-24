@@ -97,12 +97,11 @@ function invite(req, res) {
                                 meetingId:req.body.meetingId
                         }
                         var payload_encode = new Buffer(JSON.stringify(payload)).toString("base64");
-                        var checksum = sha1(payload_encode+config.secrets.api);
+                        var checksum = sha1(JSON.stringify(payload)+config.secrets.api);
                         var urlLink = url.format({
                             protocol: req.protocol,
-                            hostname: config.hostname,
-                            port: config.apiPort,
-                            pathname: '/#/trustedlogin/',
+                            hostname: config.hostname+'/#',
+                            pathname: '/trustedlogin/',
                             query: {
                                 payload:payload_encode,
                                 checksum:checksum

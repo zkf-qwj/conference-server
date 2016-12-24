@@ -23,11 +23,7 @@ RoomMember.prototype.sendMessage = function(message)
 }
 
 
-RoomMember.prototype.grantPresent =  function() {
-    this.sendMessage(  {
-            id: 'grantPresent'
-        });       
-}
+
 
 RoomMember.prototype.releasePresent =  function() {
     this.sendMessage(  {

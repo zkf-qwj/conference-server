@@ -145,13 +145,14 @@ function grantPresent(memberId, meetingId,livePresenterId) {
     try {
         var room = roomManager.getRoomById(meetingId);
         var newPresenter = room.getMemberById(livePresenterId);
-        newPresenter.grantPresent();
+        room.livePresenterId = livePresenterId;
+        room.broadcastPresent(livePresenterId);
         if (room.livePresenterId) {
             var oldPresenter = room.getMemberById(room.livePresenterId);
             oldPresenter.releasePresent();
         }
     } catch (exc) {
-        console.log('Grant present error ', memberId, meetingId);
+        console.log('Grant present error ',exc, memberId, meetingId);
     }
 }
 
@@ -164,7 +165,7 @@ function releasePresent(memberId, meetingId,livePresenterId) {
             romm.livePresenterId = null;
         }
     } catch (exc) {
-        console.log('Release present error ', memberId, meetingId);
+        console.log('Release present error ', exc,memberId, meetingId);
     }
 }
 
@@ -174,7 +175,7 @@ function chat(memberId, meetingId, text) {
         var member = room.getMemberById(memberId);
         room.broadcastChat(member, text)
     } catch (exc) {
-        console.log('Chat error ', memberId, meetingId);
+        console.log('Chat error ',exc, memberId, meetingId);
     }
 }
 
@@ -184,7 +185,7 @@ function shareScreen(meetingId,screenChannel) {
         room.screenChannel =  screenChannel;
         room.broadcastScreenChannel(screenChannel)
     } catch (exc) {
-        console.log('Share screen error ',screenChannel);
+        console.log('Share screen error ',exc,screenChannel);
     }
 }
 
@@ -204,6 +205,6 @@ function fileShare(memberId, meetingId, event,object) {
         var member = room.getMemberById(memberId);
         room.broadcastFileShare(member,event,object);
     } catch (exc) {
-        console.log('Fileshare error ', memberId, meetingId);
+        console.log('Fileshare error ', memberId, meetingId,exc);
     }
 }
