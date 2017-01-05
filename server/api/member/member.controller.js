@@ -167,17 +167,20 @@ function login(req, res) {
   if (req.body.domain)  
       return Meeting.findOne({'domain':req.body.domain}).exec()
               .then(function(meeting) {
-                  console.log(meeting);
-                  Member.findOne({'meetingId':meeting._id,'email':req.body.email,'password':req.body.password}).select('-password').exec()
-                  .then(function(member) {
-                      console.log(member);
-                      if (member) {
-                          Member.find({'meetingId':meeting._id}).select('-password').exec()
-                          .then(function(memberList) {
-                              res.json({status:true,memberList:memberList,meeting:meeting,member:member});
-                          })
-                      }
-                  });
+                  if (meeting) {
+                      Member.findOne({'meetingId':meeting._id,'email':req.body.email,'password':req.body.password}).select('-password').exec()
+                      .then(function(member) {
+                          if (member) {
+                              Member.find({'meetingId':meeting._id}).select('-password').exec()
+                              .then(function(memberList) {
+                                  res.json({status:true,memberList:memberList,meeting:meeting,member:member});
+                              })
+                          } else
+                              res.json({status:false});   
+                      })
+                      .catch(handleError(res));
+                  } else 
+                      res.json({status:false}); 
               })  
               .catch(handleError(res));
    
