@@ -90,9 +90,11 @@ function leave(memberId, meetingId) {
         console.log(memberId,meetingId);
         var room = roomManager.getRoomById(meetingId);
         var member = room.getMemberById(memberId);
-        member.leave();
-        room.unregisterMember(member.id);
-        room.broadcastMember();
+        if (member) {
+            member.leave();
+            room.unregisterMember(member.id);
+            room.broadcastMember();
+        } 
     } catch (exc) {
         console.log('Leave error', exc, 'memberId:', memberId, 'meetingId:', meetingId, 'roomManager', roomManager.roomById);
     }
@@ -145,10 +147,11 @@ function grantPresent(memberId, meetingId,livePresenterId) {
     try {
         var room = roomManager.getRoomById(meetingId);
         var newPresenter = room.getMemberById(livePresenterId);
+        var oldPresenterId = room.livePresenterId;
         room.livePresenterId = livePresenterId;
         room.broadcastPresent(livePresenterId);
-        if (room.livePresenterId) {
-            var oldPresenter = room.getMemberById(room.livePresenterId);
+        if (oldPresenterId) {
+            var oldPresenter = room.getMemberById(oldPresenterId);
             oldPresenter.releasePresent();
         }
     } catch (exc) {

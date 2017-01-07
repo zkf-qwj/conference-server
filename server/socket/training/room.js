@@ -96,7 +96,6 @@ Room.prototype.unbroadcastChannel = function(channel)
     var self = this;
     this.broadcastChannelList = _.reject(this.broadcastChannelList ,function(ch) {
        if ( ch.id == channel.id) {
-           ch.release();
            return true;
        } 
        return false;

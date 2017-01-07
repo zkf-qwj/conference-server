@@ -118,9 +118,11 @@ function leave(memberId, meetingId) {
     try {
         var room = roomManager.getRoomById(meetingId);
         var member = room.getMemberById(memberId);
-        member.leave();
-        room.unregisterMember(member.id);
-        room.broadcastMember();
+        if (member) {
+            member.leave();
+            room.unregisterMember(member.id);
+            room.broadcastMember();
+        }        
     } catch (exc) {
         console.log('Leave error', exc, 'memberId:', memberId, 'meetingId:', meetingId, 'roomManager', roomManager.roomById);
     }
@@ -168,7 +170,7 @@ function handUp(memberId, meetingId) {
         var member = room.getMemberById(memberId);
         member.raiseHand();
     } catch (exc) {
-        console.log('Raise hand error ', memberId, meetingId);
+        console.log('Raise hand error ', memberId, meetingId, exc);
     }
 }
 
@@ -178,7 +180,7 @@ function handDown(memberId, meetingId) {
         var member = room.getMemberById(memberId);
         member.lowHand();
     } catch (exc) {
-        console.log('Low hand error ', memberId, meetingId);
+        console.log('Low hand error ', memberId, meetingId, exc);
     }
 }
 
@@ -193,7 +195,7 @@ function invite(meetingId, inviteeId) {
         if (invitee)
             invitee.onDiscussion();
     } catch (exc) {
-        console.log('Invite error ', inviteeId, meetingId);
+        console.log('Invite error ', inviteeId, meetingId,exc);
     }
 }
 
@@ -204,7 +206,7 @@ function discard(meetingId, inviteeId) {
         invitee.offDiscussion();
         room.broadcastMember();
     } catch (exc) {
-        console.log('Discard error ', inviteeId, meetingId);
+        console.log('Discard error ', inviteeId, meetingId, exc);
     }
 }
 
@@ -214,7 +216,7 @@ function chat(memberId, meetingId, text) {
         var member = room.getMemberById(memberId);
         room.broadcastChat(member, text)
     } catch (exc) {
-        console.log('Chat error ', memberId, meetingId);
+        console.log('Chat error ', memberId, meetingId, exc);
     }
 }
 
@@ -234,6 +236,6 @@ function fileShare(memberId, meetingId, event,object) {
         var member = room.getMemberById(memberId);
         room.broadcastFileShare(member,event,object);
     } catch (exc) {
-        console.log('Fileshare error ', memberId, meetingId);
+        console.log('Fileshare error ', memberId, meetingId, exc);
     }
 }
