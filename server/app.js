@@ -32,8 +32,15 @@ var app = express();
 var apiServer = https.createServer(security,app);
 var trainingServer = https.createServer(security,app);
 var one2manyServer = https.createServer(security,app);
+var one2oneServer = https.createServer(security,app);
 var many2manyServer = https.createServer(security,app);
 var conferenceServer = https.createServer(security,app);
+var conferenceP2PServer = https.createServer(security,app);
+
+var one2oneWss = new ws.Server({
+    server : one2oneServer,
+    path : '/one2one'
+});
 
 var one2manyWss = new ws.Server({
     server : one2manyServer,
@@ -55,12 +62,19 @@ var conferenceWss = new ws.Server({
     path : '/conference'
 });
 
+var conferenceP2PWss = new ws.Server({
+    server : conferenceP2PServer,
+    path : '/conferenceP2P'
+});
+
 require('./config/express')(app);
 require('./routes')(app);
+require('./socket/one2one/main').one2one(one2oneWss);
 require('./socket/one2many/main').one2many(one2manyWss);
 require('./socket/many2many/main').many2many(many2manyWss);
 require('./socket/training/main').training(trainingWss);
 require('./socket/conference/main').conference(conferenceWss);
+require('./socket/conferenceP2P/main').conferenceP2P(conferenceP2PWss);
 
 // Start server
 function startServer() {
@@ -72,6 +86,12 @@ function startServer() {
     });
   app.conferenceServer = conferenceServer.listen(config.conferencePort, config.ip, function() {
       console.log('Conference server listening on %d, in %s mode', config.conferencePort, app.get('env'));
+    });
+  app.conferenceP2PServer = conferenceP2PServer.listen(config.conferenceP2PPort, config.ip, function() {
+      console.log('Conference P2P server listening on %d, in %s mode', config.conferenceP2PPort, app.get('env'));
+    });
+  app.one2oneServer = one2oneServer.listen(config.one2onePort, config.ip, function() {
+      console.log('one2one server listening on %d, in %s mode', config.one2onePort, app.get('env'));
     });
   app.one2manyServer = one2manyServer.listen(config.one2manyPort, config.ip, function() {
       console.log('one2many server listening on %d, in %s mode', config.one2manyPort, app.get('env'));
