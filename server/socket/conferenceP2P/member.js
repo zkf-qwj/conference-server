@@ -14,8 +14,7 @@ function RoomMember(id,profile, ws,room)
 RoomMember.prototype.registerChannel = function(channel)
 {
     this.channelList.push(channel);
-    if (this.profile.role=='presenter')
-        this.room.broadcastChannel(channel);
+    this.room.broadcastChannel(channel);
 }
 
 RoomMember.prototype.sendMessage = function(message)

@@ -24,6 +24,7 @@ var all = {
   // Server port
   apiPort: process.env.API_PORT || 9444,
   one2manyPort: process.env.ONE2MANY_PORT || 9445,
+  callPort: process.env.TRAINING_PORT || 9451,
   trainingPort: process.env.TRAINING_PORT || 9446,
   conferencePort: process.env.CONFERENCE_PORT || 9447,
   conferenceP2PPort: process.env.CONFERENCE_P2P_PORT || 9450,

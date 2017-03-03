@@ -5,7 +5,7 @@ exports.environments = {
       sftp: {
           host:'demo.vietinterview.com',
           user:'root',
-          pass:'VTDC@123456@',
+          pass:'TCAC2017@',
           remotePath:'/home/data/conferencecontrol/'
       }
     }

@@ -31,6 +31,7 @@ var security =
 var app = express();
 var apiServer = https.createServer(security,app);
 var trainingServer = https.createServer(security,app);
+var callServer = https.createServer(security,app);
 var one2manyServer = https.createServer(security,app);
 var one2oneServer = https.createServer(security,app);
 var many2manyServer = https.createServer(security,app);
@@ -57,6 +58,11 @@ var trainingWss = new ws.Server({
     path : '/training'
 });
 
+var callWss = new ws.Server({
+    server : callServer,
+    path : '/call'
+});
+
 var conferenceWss = new ws.Server({
     server : conferenceServer,
     path : '/conference'
@@ -73,6 +79,7 @@ require('./socket/one2one/main').one2one(one2oneWss);
 require('./socket/one2many/main').one2many(one2manyWss);
 require('./socket/many2many/main').many2many(many2manyWss);
 require('./socket/training/main').training(trainingWss);
+require('./socket/call/main').call(callWss);
 require('./socket/conference/main').conference(conferenceWss);
 require('./socket/conferenceP2P/main').conferenceP2P(conferenceP2PWss);
 
@@ -83,6 +90,9 @@ function startServer() {
   });
   app.trainingServer = trainingServer.listen(config.trainingPort, config.ip, function() {
       console.log('Training server listening on %d, in %s mode', config.trainingPort, app.get('env'));
+    });
+  app.callServer = callServer.listen(config.callPort, config.ip, function() {
+      console.log('Call server listening on %d, in %s mode', config.callPort, app.get('env'));
     });
   app.conferenceServer = conferenceServer.listen(config.conferencePort, config.ip, function() {
       console.log('Conference server listening on %d, in %s mode', config.conferencePort, app.get('env'));
