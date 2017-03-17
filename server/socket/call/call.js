@@ -6,63 +6,8 @@ function Call(id)
 {
     this.id = id;
     this.memberById = {};
-    this.channelList = [];
 }
 
-Call.prototype.connectChannel = function(channel)
-{
-    this.channelList = _.reject(this.channelList,function(ch) {
-       if ( ch.id == channel.id || (ch.source == channel.source && ch.publisherId==channel.publisherId)) {    
-           return true;
-       } 
-       return false;
-    });
-    this.channelList.push(channel);
-    _.each(this.memberById, function(m)
-    {
-        try
-        {
-            if (m.id != channel.publisherId)
-                m.ws.send(JSON.stringify(
-                {
-                    id: 'connect',
-                    channel: channel
-                }));
-        }
-        catch (exception)
-        {
-            console.log(exception);
-        }
-    });
-}
-
-
-Call.prototype.disconnectChannel = function(channel)
-{
-    var self = this;
-    this.channelList = _.reject(this.channelList ,function(ch) {
-       if ( ch.id == channel.id) {
-           return true;
-       } 
-       return false;
-    });
-    _.each(this.memberById, function(m)
-    {
-        try
-        {
-            if (m.id != channel.publisherId)
-                m.ws.send(JSON.stringify(
-                {
-                    id: 'disconnect',
-                    channel: channel
-                }));
-        }
-        catch (exception)
-        {
-            console.log(exception);
-        }
-    });
-}
 
 Call.prototype.registerMember = function(id,ws,callback)
 {
@@ -104,6 +49,30 @@ Call.prototype.broadcastChat = function(sender,text)
                     console.log(exception);
                 }
             });
+}
+
+Call.prototype.broadcastMember =function()
+{
+    var memberList = _.map(this.memberById, function(member) {
+        return {
+            id: member.id,
+        }
+    });
+    
+    _.each(this.memberById, function(member) {
+        try
+        {
+            member.ws.send(JSON.stringify(
+            {
+                id: 'memberStatus',
+                memberList: memberList
+            }));
+        }
+        catch (exception)
+        {
+            console.log(exception);
+        }
+    });
 }
 
 Call.prototype.broadcastWhiteboard = function(sender,object,event)

@@ -34,6 +34,7 @@ var trainingServer = https.createServer(security,app);
 var callServer = https.createServer(security,app);
 var one2manyServer = https.createServer(security,app);
 var one2oneServer = https.createServer(security,app);
+var one2oneDirectServer = https.createServer(security,app);
 var many2manyServer = https.createServer(security,app);
 var conferenceServer = https.createServer(security,app);
 var conferenceP2PServer = https.createServer(security,app);
@@ -41,6 +42,11 @@ var conferenceP2PServer = https.createServer(security,app);
 var one2oneWss = new ws.Server({
     server : one2oneServer,
     path : '/one2one'
+});
+
+var one2oneDirectWss = new ws.Server({
+    server : one2oneDirectServer,
+    path : '/one2oneDirect'
 });
 
 var one2manyWss = new ws.Server({
@@ -76,6 +82,7 @@ var conferenceP2PWss = new ws.Server({
 require('./config/express')(app);
 require('./routes')(app);
 require('./socket/one2one/main').one2one(one2oneWss);
+require('./socket/one2oneDirect/main').one2oneDirect(one2oneDirectWss);
 require('./socket/one2many/main').one2many(one2manyWss);
 require('./socket/many2many/main').many2many(many2manyWss);
 require('./socket/training/main').training(trainingWss);
@@ -102,6 +109,9 @@ function startServer() {
     });
   app.one2oneServer = one2oneServer.listen(config.one2onePort, config.ip, function() {
       console.log('one2one server listening on %d, in %s mode', config.one2onePort, app.get('env'));
+    });
+  app.one2oneDirectServer = one2oneDirectServer.listen(config.one2oneDirectPort, config.ip, function() {
+      console.log('one2one direct server listening on %d, in %s mode', config.one2oneDirectPort, app.get('env'));
     });
   app.one2manyServer = one2manyServer.listen(config.one2manyPort, config.ip, function() {
       console.log('one2many server listening on %d, in %s mode', config.one2manyPort, app.get('env'));

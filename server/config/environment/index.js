@@ -30,6 +30,7 @@ var all = {
   conferenceP2PPort: process.env.CONFERENCE_P2P_PORT || 9450,
   many2manyPort: process.env.MANY2MANY_PORT || 9448,
   one2onePort: process.env.ONE2ONE_PORT || 9449,
+  one2oneDirectPort: process.env.ONE2ONE_PORT || 9452,
 
   // Server IP
   ip: process.env.IP || '0.0.0.0',

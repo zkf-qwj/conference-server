@@ -8,19 +8,9 @@ function CallMember(id,profile, ws,call)
     this.ws = ws;
     this.call = call;
     this.profile = profile;
-    this.channel = null;
-}
-
-CallMember.prototype.connect = function(channel)
-{
-    this.channel = channel;
-    this.call.connectChannel(channel);
 }
 
 
-CallMember.prototype.disconnect = function() {
-    this.call.disconnectChannel(this.channel); 
-}
 
 
 module.exports = CallMember

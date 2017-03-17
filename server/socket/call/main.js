@@ -15,6 +15,16 @@ function nextUniqueId() {
     idCounter++;
     return idCounter.toString();
 }
+
+function stop(sessionId) {
+    var session = sessionMap[sessionId];
+    if (session) {
+        leave(session.memberId, session.meetingId);
+        delete sessionMap[sessionId];
+    }
+}
+
+
 module.exports = {
     call: function(wss) {
         wss.on('connection', function(ws) {
@@ -49,9 +59,6 @@ module.exports = {
                     case 'leave':
                         leave(message.memberId, message.meetingId);
                         break;    
-                    case 'connect':
-                        connect(message.memberId, message.meetingId,message.channel);
-                        break;
                     case 'end':
                         end(message.meetingId);
                         break;
@@ -76,11 +83,12 @@ module.exports = {
     }
 }
 
-function connect(memberId, meetingId,channel) {
+
+
+function updateMemberList(meetingId) {
     try {
         var call = callManager.getCallById(meetingId);
-        var member = call.getMemberById(memberId);
-        member.connect(channel);
+        call.broadcastMember();
     } catch (exc) {
         console.log('Connect channel error ', memberId, meetingId,channel);
     }
@@ -91,21 +99,15 @@ function leave(memberId, meetingId) {
         var call = callManager.getCallById(meetingId);
         var member = call.getMemberById(memberId);
         if (member) {
-            member.disconnect();
             call.unregisterMember(member.id);
+            updateMemberList(meetingId);
         } 
     } catch (exc) {
         console.log('Leave error', exc, 'memberId:', memberId, 'meetingId:', meetingId, 'callManager', callManager.callById);
     }
 }
 
-function stop(sessionId) {
-    var session = sessionMap[sessionId];
-    if (session) {
-        leave(session.memberId, session.meetingId);
-        delete sessionMap[sessionId];
-    }
-}
+
 
 
 function join(memberId, meetingId, ws) {
@@ -114,16 +116,11 @@ function join(memberId, meetingId, ws) {
             console.log('Register call success ', meetingId);
             call.registerMember(memberId, ws, function(success, member) {
                 console.log('Register member success ', memberId);
-                if (success) {
-                    ws.send(JSON.stringify({
-                        id: 'joinResponse',
-                        response: 'accepted',
-                        channelList:call.channelList
-                    }));
-                } else ws.send(JSON.stringify({
+                ws.send(JSON.stringify({
                     id: 'joinResponse',
-                    response: 'rejected',
+                    response: 'accepted',
                 }));
+                updateMemberList(meetingId);
             });
         } else ws.send(JSON.stringify({
             id: 'joinResponse',
