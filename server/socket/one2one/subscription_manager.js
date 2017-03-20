@@ -30,6 +30,14 @@ SubscriptionManager.prototype.getSubById = function(id)
     return this.subById[id];
 }
 
+SubscriptionManager.prototype.getSubBySubscriber = function(subscriberId)
+{
+    var subscriber = _.find(this.subById,function(sub) {
+        return sub.subscriberId == subscriberId ;
+    });
+    return subscriber;
+}
+
 SubscriptionManager.prototype.releaseSubInSession = function(sessionId)
 {
     _.pairs(this.subById,function(id,sub) {

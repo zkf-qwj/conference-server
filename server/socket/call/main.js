@@ -69,7 +69,7 @@ module.exports = {
                         chat(message.memberId, message.meetingId, message.text);
                         break;
                     case 'whiteboard':
-                        whiteboard(message.memberId, message.object,message.event);
+                        whiteboard(message.memberId, message.meetingId,message.object,message.event);
                         break;
                     default:
                         ws.send(JSON.stringify({
@@ -143,7 +143,7 @@ function chat(memberId, meetingId, text) {
     }
 }
 
-function whiteboard(memberId, object, event) {
+function whiteboard(memberId,meetingId, object, event) {
     try {
         var call = callManager.getCallById(meetingId);
         var member = call.getMemberById(memberId);

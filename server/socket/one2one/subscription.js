@@ -11,11 +11,14 @@ function nextSubscriptionId() {
 }
 
 
-function Subscription()
+function Subscription(channelId,subscriberId)
 {
     this.id = nextSubscriptionId();
-    this.subCandidateSendQueue = [];
+    this.channelId = channelId;
+    this.subscriberId = subscriberId;
+    this.subCandidateRecvQueue = [];
     this.subWebRtcEndpoint = null;
+    this.sdpOffer = null;
 }
 
 Subscription.prototype.release = function() {
@@ -44,8 +47,19 @@ function getKurentoClient(callback)
     });
 }
 
+Subscription.prototype.subscribeCandidate = function(candidate) {
+    this.subCandidateRecvQueue.push(candidate)
+    if (this.sdpOffer) {
+        console.log('Process candidate');
+        _.each(this.subCandidateRecvQueue,function(_candidate) {
+            var kurentoCandidate = kurento.getComplexType('IceCandidate')(_candidate);
+            this.subWebRtcEndpoint.addIceCandidate(kurentoCandidate);
+        });
+        self.subCandidateRecvQueue = [];
+    }
+}
 
-Subscription.prototype.subscribe = function(channel, sdpOffer, candidateList,bitrate,callback)
+Subscription.prototype.subscribeOffer = function(channel, sdpOffer,bitrate,onSubscribeComplete,onSubscribeCandidate, onSubscribeResponse)
 {
     var self = this;
     getKurentoClient(function(error, kurentoClient)
@@ -86,11 +100,14 @@ Subscription.prototype.subscribe = function(channel, sdpOffer, candidateList,bit
                         return callback(false);;
                     }
                     console.log('Process offer for subscriber'+self.id +' channel:' + channel.id +' successfully');
-                    _.each(candidateList,function(_candidate) {
+                    self.sdpOffer =  sdpOffer;
+                    onSubscribeResponse(true,sdpAnswer);
+                    _.each(self.subCandidateRecvQueue,function(_candidate) {
+                        console.log('Process candidate');
                         var candidate = kurento.getComplexType('IceCandidate')(_candidate);
                         self.subWebRtcEndpoint.addIceCandidate(candidate);
                     });
-                    self.subCandidateSendQueue = [];
+                    self.subCandidateRecvQueue = [];
                     subWebRtcEndpoint.gatherCandidates(function(error)
                     {
                         if (error)
@@ -103,12 +120,12 @@ Subscription.prototype.subscribe = function(channel, sdpOffer, candidateList,bit
                     subWebRtcEndpoint.on('OnIceCandidate', function(event)
                     {
                         console.log('Subscription  ' + self.id+': save local candidate',new Date());
-                        self.subCandidateSendQueue.push(event.candidate);
+                        onSubscribeCandidate(event.candidate);
                     });
                     subWebRtcEndpoint.on('OnIceGatheringDone', function(event)
                     {
                         console.log('Subscription  ' + self.id+': complete gather candidate');
-                        callback(true, sdpAnswer,self.subCandidateSendQueue);
+                        channel.connect(self,onSubscribeComplete);
                     });
                 });
             });

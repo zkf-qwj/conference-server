@@ -47,6 +47,7 @@ Connection.prototype.sendAnswer = function(source,sdpAnswer) {
 Connection.prototype.sendIceCandidate = function(source,candidate) {
     _.each(this.endpoints,function(endpoint) {
        if (endpoint.ws && endpoint.id != source.id) {
+           console.log('Send ice candidate ', endpoint.id, candidate);
            endpoint.ws.send(JSON.stringify({
                id: 'iceCandidate',
                candidate:candidate

@@ -18,7 +18,8 @@ function Channel(sessionId,publisherId,source)
     this.sessionId = sessionId;
     this.pipeline = null;
     this.pubWebRtcEndpoint = null;
-    this.pubCandidateSendQueue =  [];
+    this.sdpOffer = null;
+    this.pubCandidateRecvQueue =  [];
 }
 
 
@@ -43,7 +44,7 @@ function getKurentoClient(callback)
 }
 
 
-Channel.prototype.connect = function(subscription)
+Channel.prototype.connect = function(subscription,callback)
 {
     this.pubWebRtcEndpoint.connect(subscription.subWebRtcEndpoint, function( error)
     {
@@ -52,8 +53,9 @@ Channel.prototype.connect = function(subscription)
             console.log(error)
         } else
         console.log(
-            'Connect WebRtcEndpoint for subscription'+subscription.id +' channel:' + this.id +' successfully'
-        );
+            'Connect WebRtcEndpoint for subscription'+subscription.id +' channel:' + this.id +' successfully');
+            callback();
+        
     });
 }
 
@@ -65,7 +67,18 @@ Channel.prototype.release = function() {
         this.pubWebRtcEndpoint.release();
 }
 
-Channel.prototype.publish = function(sdpOffer,candidateList, bitrate,callback)
+Channel.prototype.publishCandidate = function(candidate) {
+    this.pubCandidateRecvQueue.push(candidate)
+    if (this.sdpOffer) {
+        _.each(this.pubCandidateRecvQueue,function(_candidate) {
+            var kurentoCandidate = kurento.getComplexType('IceCandidate')(_candidate);
+            this.pubWebRtcEndpoint.addIceCandidate(kurentoCandidate);
+        });
+        self.pubCandidateRecvQueue = [];
+    }
+}
+
+Channel.prototype.publish = function(sdpOffer,bitrate,onPublishComplete, onPublishCandidate,onPublishResponse)
 {
     var self = this;
     getKurentoClient(function(error, kurentoClient)
@@ -91,43 +104,46 @@ Channel.prototype.publish = function(sdpOffer,candidateList, bitrate,callback)
                 }
                 self.pipeline = pipeline;
                 self.pubWebRtcEndpoint = pubWebRtcEndpoint;
-                self.pubCandidateSendQueue = [];
+                self.pubCandidateRecvQueue = [];
                 console.log('Channel offer',sdpOffer);
                 self.pubWebRtcEndpoint.setMaxVideoRecvBandwidth(bitrate,function(error) {
                     if (error)
                     {
                         console.log('Set bitrate publisher' +self.id+' error',error);
-                        return callback(false);
+                        return;
                     }
                     self.pubWebRtcEndpoint.processOffer(sdpOffer, function(error,sdpAnswer)
                     {
                         if (error)
                         {
                             console.log('Channel'+self.id +' fail to process offer',error );
-                            return callback(false);;
+                            return;
                         }
-                        _.each(candidateList,function(_candidate) {
+                        self.sdpOffer = sdpOffer;
+                        onPublishResponse(true,sdpAnswer);
+                        _.each(self.pubCandidateRecvQueue,function(_candidate) {
                             var candidate = kurento.getComplexType('IceCandidate')(_candidate);
                             self.pubWebRtcEndpoint.addIceCandidate(candidate);
                         });
+                        self.pubCandidateRecvQueue = [];
                         pubWebRtcEndpoint.gatherCandidates(function(error)
                         {
                             if (error)
                             {
                                 console.log(error)
                                 console.log('Channel'+self.id +' fail to gather candidate' );
-                                return callback(false);;
+                                return;
                             }
                         });
                         pubWebRtcEndpoint.on('OnIceCandidate', function(event)
                         {
                             console.log('Channel  ' + self.id+': save local candidate', new Date());
-                            self.pubCandidateSendQueue.push(event.candidate);
+                            onPublishCandidate(event.candidate);
                         });
                         pubWebRtcEndpoint.on('OnIceGatheringDone', function(event)
                         {
                             console.log('Channel'+self.id +' complete gather candidate' );
-                            callback(true, sdpAnswer,self.pubCandidateSendQueue);
+                            onPublishComplete();
                         });
                     });
                 });

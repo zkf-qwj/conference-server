@@ -30,6 +30,14 @@ ChannelManager.prototype.getChannelById = function(id)
     return this.channelById[id];
 }
 
+ChannelManager.prototype.getChannelByPublisher = function(publisherId,source)
+{
+    var channel = _.find(this.channelById,function(ch) {
+        return ch.publisherId == publisherId && channel.source == source;
+    });
+    return channel;
+}
+
 ChannelManager.prototype.releaseChannelInSession = function(sessionId)
 {
     _.pairs(this.channelById,function(id,channel) {

@@ -41,11 +41,23 @@ module.exports = {
                 }
                 console.log('Streaming Connection ' + sessionId + ' received message ', message.id);
                 switch (message.id) {
-                    case 'publish':
-                        publish(ws,sessionId,message.publisherId,message.source,message.sdpOffer,message.candidateList,message.bitrate);
+                    case 'publishOffer':
+                        publishOffer(ws,sessionId,message.channelId,message.sdpOffer,message.bitrate);
                         break;
-                    case 'subscribe':
-                        subscribe(ws,sessionId,message.channelId, message.sdpOffer,message.candidateList,message.bitrate);
+                    case 'publishBind':
+                        publishBind(ws,sessionId,message.publisherId,message.source);
+                        break;
+                    case 'publishCandidate':
+                        publishCandidate(ws,sessionId,message.channelId,message.candidate);
+                        break;
+                    case 'subscribeOffer':
+                        subscribeOffer(ws,sessionId,message.subscriptionId, message.sdpOffer,message.bitrate);
+                        break;
+                    case 'subscribeCandidate':
+                        subscribeCandidate(ws,sessionId,message.subscriptionId,message.candidate);
+                        break;
+                    case 'subscribeBind':
+                        subscribeBind(ws,sessionId,message.channelId,message.subscriberId);
                         break;
                     case 'unpublish':
                         unpublish(message.channelId);
@@ -59,13 +71,11 @@ module.exports = {
                     case 'unsubscribeAll':
                         unsubscribeAll(sessionId);
                         break;
-                    case 'connect':
-                        connect(message.channelId,message.subscriptionId);
-                        break;
                     case 'stop':
                         stop(sessionId);
                         break;
                     default:
+                        console.log(message);
                         ws.send(JSON.stringify({
                             id: 'error',
                             message: 'Invalid message ' + message
@@ -98,70 +108,123 @@ function stop(sessionId) {
     subscriptionManager.releaseSubInSession(sessionId);
 }
 
-function publish(ws,sessionId, publisherId,source,sdpOffer,candidateList,bitrate) {
+function publishBind(ws,sessionId, publisherId,source) {
+    var channel = new Channel(sessionId,publisherId,source);
+    channelManager.registerChannel(channel);
+    console.log('Register channel success', channel.id);
+    ws.send(JSON.stringify({
+        id: 'publishBind',
+        channelId:channel.id,
+        publisherId:publisherId,
+        source:source
+    }));
+}
+
+function publishOffer(ws,sessionId, channelId,sdpOffer,bitrate) {
     try {
-        var channel = new Channel(sessionId,source);
-        channel.publish(sdpOffer,candidateList,bitrate, function(success, sdpAnswer,candidateList) {
+        var channel = channelManager.getChannelById(channelId);
+        var onPublishComplete =  function() {
+            ws.send(JSON.stringify({
+                id: 'publishComplete',
+                channelId:channel.id,
+                publisherId:channel.publisherId,
+                source:channel.source
+            }));
+        }
+        var onPublishCandidate =  function(candidate) {
+            ws.send(JSON.stringify({
+                id: 'publishCandidate',
+                channelId:channel.id,
+                publisherId:channel.publisherId,
+                source:channel.source,
+                candidate:candidate
+            }));
+        }
+        var onPublishResponse = function(success, sdpAnswer) {
             if (success) {
-                channelManager.registerChannel(channel);
-                console.log('Register channel success', channel.id);
                 ws.send(JSON.stringify({
-                    id: 'publishResponse',
-                    response: 'accepted',
+                    id: 'publishAnswer',
                     channelId:channel.id,
-                    publisherId:publisherId,
-                    source:source,
-                    sdpAnswer: sdpAnswer,
-                    candidateList:candidateList
+                    publisherId:channel.publisherId,
+                    source:channel.source,
+                    sdpAnswer: sdpAnswer
                 }));
-            } else {
-                ws.send(JSON.stringify({
-                    id: 'publishResponse',
-                    response: 'rejected',
-                    source:source,
-                    publisherId:publisherId
-                }));
-            }
-        })
+            } 
+        };
+        channel.publish(sdpOffer,bitrate,onPublishComplete, onPublishCandidate,onPublishResponse);
+        
     } catch (exc) {
-        console.log('Publish error ', sessionId, publisherId);
+        console.log('Publish offer error ',exc, sessionId, channelId);
     }
 }
 
-function subscribe(ws,sessionId,channelId, sdpOffer,candidateList,bitrate) {
+
+function publishCandidate(ws,sessionId, channelId,candidate) {
     try {
-        var subscription = new Subscription(sessionId);
         var channel = channelManager.getChannelById(channelId);
-        subscription.subscribe(channel, sdpOffer, candidateList,bitrate,function(success, sdpAnswer,candidateList) {
+        channel.publishCandidate(candidate);
+        
+    } catch (exc) {
+        console.log('Publish candidate error ',exc, sessionId, channelId);
+    }
+}
+
+function subscribeBind(ws,sessionId, channelId,subscriberId) {
+    var subscription = new Subscription(channelId,subscriberId);
+    subscriptionManager.registerSub(subscription);
+    console.log('Register Sub success', subscription.id);
+    ws.send(JSON.stringify({
+        id: 'subscribeBind',
+        channelId:channelId,
+        subscriptionId:subscription.id,
+    }));
+}
+
+function subscribeOffer(ws,sessionId,subscriptionId, sdpOffer,bitrate) {
+    try {
+        var subscription = subscriptionManager.getSubById(subscriptionId);
+        var channel = channelManager.getChannelById(subscription.channelId);
+        var onSubscribeComplete =  function() {
+            ws.send(JSON.stringify({
+                id: 'subscribeComplete',
+                channelId:subscription.channelId,
+                subscriptionId: subscription.id
+            }));
+        }
+        var onSubscribeCandidate =  function(candidate) {
+            ws.send(JSON.stringify({
+                id: 'subscribeCandidate',
+                channelId:subscription.channelId,
+                subscriptionId: subscription.id,
+                candidate:candidate
+            }));
+        }
+        var onSubscribeResponse = function(success, sdpAnswer) {
             if (success) {
-                subscriptionManager.registerSub(subscription);
-                ws.send(JSON.stringify( {
-                    id: 'subscribeResponse',
-                    response: 'accepted',
-                    channelId: channelId,
+                ws.send(JSON.stringify({
+                    id: 'subscribeAnswer',
+                    channelId:subscription.channelId,
                     subscriptionId: subscription.id,
-                    sdpAnswer: sdpAnswer,
-                    candidateList:candidateList
+                    sdpAnswer: sdpAnswer
                 }));
-            } else {
-                ws.send(JSON.stringify( {
-                    id: 'subscribeResponse',
-                    response: 'rejected',
-                    channelId: channelId
-                }));
-            }
-        })
+            } 
+        };
+        subscription.subscribeOffer(channel, sdpOffer,bitrate,onSubscribeComplete,onSubscribeCandidate, onSubscribeResponse); 
+        
     } catch (exc) {
-        console.log('Subscribe error ', sessionId, channelId);
+        console.log('Subscribe offer error ', exc,sessionId, channelId,subscriberId);
     }
 }
 
-function connect(channelId, subId) {
+function subscribeCandidate(ws,sessionId, subscriptionId,candidate) {
     try {
-        var channel = channelManager.getChannelById(channelId);
-        var subscription = subscriptionManager.getSubById(subId);
-        channel.connect(subscription);
+        var subscription = subscriptionManager.getSubById(subscriptionId);
+        subscription.subscribeCandidate(candidate);
+        
     } catch (exc) {
-        console.log('Connect error ', channelId, subId);
+        console.log('Subscribe candidate error ',exc, sessionId, subscriptionId);
     }
 }
+
+
+
