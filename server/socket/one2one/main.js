@@ -123,14 +123,6 @@ function publishBind(ws,sessionId, publisherId,source) {
 function publishOffer(ws,sessionId, channelId,sdpOffer,bitrate) {
     try {
         var channel = channelManager.getChannelById(channelId);
-        var onPublishComplete =  function() {
-            ws.send(JSON.stringify({
-                id: 'publishComplete',
-                channelId:channel.id,
-                publisherId:channel.publisherId,
-                source:channel.source
-            }));
-        }
         var onPublishCandidate =  function(candidate) {
             ws.send(JSON.stringify({
                 id: 'publishCandidate',
@@ -151,7 +143,7 @@ function publishOffer(ws,sessionId, channelId,sdpOffer,bitrate) {
                 }));
             } 
         };
-        channel.publish(sdpOffer,bitrate,onPublishComplete, onPublishCandidate,onPublishResponse);
+        channel.publish(sdpOffer,bitrate, onPublishCandidate,onPublishResponse);
         
     } catch (exc) {
         console.log('Publish offer error ',exc, sessionId, channelId);
@@ -184,13 +176,6 @@ function subscribeOffer(ws,sessionId,subscriptionId, sdpOffer,bitrate) {
     try {
         var subscription = subscriptionManager.getSubById(subscriptionId);
         var channel = channelManager.getChannelById(subscription.channelId);
-        var onSubscribeComplete =  function() {
-            ws.send(JSON.stringify({
-                id: 'subscribeComplete',
-                channelId:subscription.channelId,
-                subscriptionId: subscription.id
-            }));
-        }
         var onSubscribeCandidate =  function(candidate) {
             ws.send(JSON.stringify({
                 id: 'subscribeCandidate',
@@ -209,7 +194,7 @@ function subscribeOffer(ws,sessionId,subscriptionId, sdpOffer,bitrate) {
                 }));
             } 
         };
-        subscription.subscribeOffer(channel, sdpOffer,bitrate,onSubscribeComplete,onSubscribeCandidate, onSubscribeResponse); 
+        subscription.subscribeOffer(channel, sdpOffer,bitrate,onSubscribeCandidate, onSubscribeResponse); 
         
     } catch (exc) {
         console.log('Subscribe offer error ', exc,sessionId, channelId,subscriberId);

@@ -18,12 +18,23 @@ function Party(id,sessionId)
     this.id = id;
     this.sessionId = sessionId;
     this.webRtcEndpoint = null;
-    this.candidateSendQueue = [];
-    this.sdpAnswer = null;
+    this.candidateRecvQueue = [];
+    this.sdpOffer = null;
     this.port = null;
 }
 
-
+Party.prototype.sendCandidate = function(_candidate) {
+	console.log('Party ' + this.id +' process candiddate');
+	var self = this;
+	var candidate = kurento.getComplexType('IceCandidate')(_candidate);
+	self.candidateRecvQueue.push(candidate)
+    if (this.sdpOffer && this.webRtcEndpoint) {
+        while(this.webRtcEndpoint.length) {
+            var candidate = this.candidateRecvQueue.shift();
+            this.webRtcEndpoint.addIceCandidate(candidate);
+        }
+    }
+}
 
 Party.prototype.release = function() {
     console.log("Release resoure for party" + this.id);
@@ -34,7 +45,7 @@ Party.prototype.release = function() {
 }
 
 
-Party.prototype.join = function(conversation,sdpOffer,candidateList, bitrate,callback)
+Party.prototype.sendOffer = function(conversation,sdpOffer,bitrate, onConnectResponse,onConnectCandidate)
 {
     var self = this;
     conversation.pipeline.create('WebRtcEndpoint', function(error, webRtcEndpoint)
@@ -42,50 +53,44 @@ Party.prototype.join = function(conversation,sdpOffer,candidateList, bitrate,cal
         if (error)
         {
             console.log('Create WebRtcEndpoint for party' +self.id+' error',error);
-            return callback(false);
+            return onConnectResponse(false);
         }
         self.webRtcEndpoint = webRtcEndpoint;
-        self.candidateSendQueue = [];
+        self.webRtcEndpoint.on('OnIceCandidate', function(event)
+        {
+            console.log('Party  ' + self.id+': save local candidate', new Date());
+            onConnectCandidate(event.candidate);
+        });
         console.log('Channel offer',sdpOffer);
         getHubport(conversation.composite,function(port) {
             self.port = port;
-            port.connect(webRtcEndpoint);
-            webRtcEndpoint.connect(port);
+            self.port.connect(self.webRtcEndpoint);
+            self.webRtcEndpoint.connect(port);
             self.webRtcEndpoint.setMaxVideoRecvBandwidth(bitrate,function(error) {
                 if (error)
                 {
                     console.log('Set bitrate party' +self.id+' error',error);
-                    return callback(false);
+                    return onConnectResponse(false);
                 }
                 self.webRtcEndpoint.processOffer(sdpOffer, function(error,sdpAnswer)
                 {
                     if (error)
                     {
                         console.log('Party'+self.id +' fail to process offer',error );
-                        return callback(false);;
+                        return onConnectResponse(false);;
                     }
-                    _.each(candidateList,function(_candidate) {
-                        var candidate = kurento.getComplexType('IceCandidate')(_candidate);
-                        self.webRtcEndpoint.addIceCandidate(candidate);
-                    });
-                    webRtcEndpoint.gatherCandidates(function(error)
+                    self.sdpOffer =  sdpOffer;
+                    while(self.candidateRecvQueue.length) {
+                        self.webRtcEndpoint.addIceCandidate(self.candidateRecvQueue.shift());
+                    };
+                    self.webRtcEndpoint.gatherCandidates(function(error)
                     {
                         if (error)
                         {
-                            console.log(error)
-                            console.log('Party'+self.id +' fail to gather candidate' );
-                            return callback(false);;
+                            console.log('Party'+self.id +' fail to gather candidate',error );
+                            return onConnectResponse(false);;
                         }
-                    });
-                    webRtcEndpoint.on('OnIceCandidate', function(event)
-                    {
-                        console.log('Party  ' + self.id+': save local candidate', new Date());
-                        self.candidateSendQueue.push(event.candidate);
-                    });
-                    webRtcEndpoint.on('OnIceGatheringDone', function(event)
-                    {
-                        console.log('Party'+self.id +' complete gather candidate' );
-                        callback(true, sdpAnswer,self.candidateSendQueue);
+                        onConnectResponse(true,sdpAnswer);
                     });
                 });
             });

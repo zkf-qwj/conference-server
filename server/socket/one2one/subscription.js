@@ -47,19 +47,20 @@ function getKurentoClient(callback)
     });
 }
 
-Subscription.prototype.subscribeCandidate = function(candidate) {
-    this.subCandidateRecvQueue.push(candidate)
-    if (this.sdpOffer) {
-        console.log('Process candidate');
-        _.each(this.subCandidateRecvQueue,function(_candidate) {
-            var kurentoCandidate = kurento.getComplexType('IceCandidate')(_candidate);
-            this.subWebRtcEndpoint.addIceCandidate(kurentoCandidate);
-        });
-        self.subCandidateRecvQueue = [];
+Subscription.prototype.subscribeCandidate = function(_candidate) {
+	console.log('Process candidate of subscription:', this.id);
+	var self = this;
+	var candidate = kurento.getComplexType('IceCandidate')(_candidate);
+	self.subCandidateRecvQueue.push(candidate);
+    if (self.sdpOffer && self.subWebRtcEndpoint) {
+    	while(self.subCandidateRecvQueue.length) {
+            var candidate = self.subCandidateRecvQueue.shift();
+            self.subWebRtcEndpoint.addIceCandidate(candidate);
+        }
     }
 }
 
-Subscription.prototype.subscribeOffer = function(channel, sdpOffer,bitrate,onSubscribeComplete,onSubscribeCandidate, onSubscribeResponse)
+Subscription.prototype.subscribeOffer = function(channel, sdpOffer,bitrate,onSubscribeCandidate, onSubscribeResponse)
 {
     var self = this;
     getKurentoClient(function(error, kurentoClient)
@@ -67,69 +68,62 @@ Subscription.prototype.subscribeOffer = function(channel, sdpOffer,bitrate,onSub
         if (error)
         {
             console.log('Create Kurento Client error');
-            return callback(false);
+            return onSubscribeResponse(false);
         }
         if (!channel.pipeline)
         {
-            console.log(channel);
             console.log('Channel not ready ' + channel.id);
-            return callback(false);
+            return onSubscribeResponse(false);
         }
         channel.pipeline.create('WebRtcEndpoint', function(error, subWebRtcEndpoint)
         {
             if (error)
             { 
                 console.log('Create WebRtcEndpoint for subscription '+self.id +' channel:' + channel.id +' error');
-                return callback(false);
+                return onSubscribeResponse(false);
             }
             console.log('Create WebRtcEndpoint for subscription'+self.id +' channel:' + channel.id +' successfully');
             self.subWebRtcEndpoint =  subWebRtcEndpoint;
-            
-            self.subWebRtcEndpoint.setMaxVideoSendBandwidth(bitrate,function(error) {
-                if (error)
-                { 
-                    console.log('Set bitrate for subscription '+self.id +' channel:' + channel.id +' error');
-                    return callback(false);
-                }
-                subWebRtcEndpoint.processOffer(sdpOffer, function(error, sdpAnswer)
+            self.subWebRtcEndpoint.on('OnIceCandidate', function(event)
+                    {
+                        console.log('Subscription  ' + self.id+': save local candidate',new Date());
+                        var candidate = kurento.getComplexType('IceCandidate')(event.candidate);
+                        onSubscribeCandidate(candidate);
+                    });
+                    self.subWebRtcEndpoint.on('OnIceGatheringDone', function(event)
+                    {
+                        console.log('Subscription  ' + self.id+': complete gather candidate');
+                        
+                    });
+
+                self.subWebRtcEndpoint.processOffer(sdpOffer, function(error, sdpAnswer)
                 {
                     if (error)
                     {
                         console.log('Subscriber'+self.id +' fail to process offer , channel ',channel.id );
-                        console.log(error)
-                        return callback(false);;
+                        return onSubscribeResponse(false);;
                     }
                     console.log('Process offer for subscriber'+self.id +' channel:' + channel.id +' successfully');
                     self.sdpOffer =  sdpOffer;
-                    onSubscribeResponse(true,sdpAnswer);
-                    _.each(self.subCandidateRecvQueue,function(_candidate) {
-                        console.log('Process candidate');
-                        var candidate = kurento.getComplexType('IceCandidate')(_candidate);
+                    while(self.subCandidateRecvQueue.length) {
+                        var candidate = self.subCandidateRecvQueue.shift();
                         self.subWebRtcEndpoint.addIceCandidate(candidate);
-                    });
-                    self.subCandidateRecvQueue = [];
-                    subWebRtcEndpoint.gatherCandidates(function(error)
+                    }
+                    self.subWebRtcEndpoint.gatherCandidates(function(error)
                     {
                         if (error)
                         {
-                            console.log(error)
-                            console.log('Subscriber'+self.id +' fail to gather candidate , channel ',channel.id );
-                            return callback(false);
+                            console.log('Subscriber'+self.id +' fail to gather candidate , channel ',channel.id ,error);
+                            return onSubscribeResponse(false);
                         }
+                        channel.connect(self,function() {
+                        	onSubscribeResponse(true,sdpAnswer);
+                        });
+                        
                     });
-                    subWebRtcEndpoint.on('OnIceCandidate', function(event)
-                    {
-                        console.log('Subscription  ' + self.id+': save local candidate',new Date());
-                        onSubscribeCandidate(event.candidate);
-                    });
-                    subWebRtcEndpoint.on('OnIceGatheringDone', function(event)
-                    {
-                        console.log('Subscription  ' + self.id+': complete gather candidate');
-                        channel.connect(self,onSubscribeComplete);
-                    });
+                   
                 });
             });
-        });
     })
 }
 

@@ -111,7 +111,7 @@ function startServer() {
       console.log('one2one server listening on %d, in %s mode', config.one2onePort, app.get('env'));
     });
   app.one2oneDirectServer = one2oneDirectServer.listen(config.one2oneDirectPort, config.ip, function() {
-      console.log('one2one direct server listening on %d, in %s mode', config.one2oneDirectPort, app.get('env'));
+      console.log('one2oneDirect direct server listening on %d, in %s mode', config.one2oneDirectPort, app.get('env'));
     });
   app.one2manyServer = one2manyServer.listen(config.one2manyPort, config.ip, function() {
       console.log('one2many server listening on %d, in %s mode', config.one2manyPort, app.get('env'));

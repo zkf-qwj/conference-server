@@ -36,6 +36,11 @@ Conversation.prototype.registerParty = function(party) {
     this.partyById[party.id] = party;  
 }
 
+Conversation.prototype.getPartyById = function(id)
+{
+    return this.partyById[id];
+}
+
 Conversation.prototype.removeParty = function(id) {
     var party = this.partyById[id];
     try {

@@ -14,7 +14,8 @@ module.exports = {
   uploadDir:'E:\\git\\conference-server\\server\\public',
   scriptDir:'E:\\git\\conference-server\\server\\scripts',
   hostname : 'localhost',
-  ws_uri: "ws://demo.vietinterview.com:8888/kurento",
+  //ws_uri: "ws://54.219.159.126:8888/kurento",
+  ws_uri: "ws://localhost:8888/kurento",
   security:
   {
       key:  './config/keys/server.key',

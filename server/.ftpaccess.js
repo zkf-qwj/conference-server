@@ -1,5 +1,11 @@
 exports.environments = {
   development: {
+    sftp: {
+          host:'fullstacks.info',
+          user:'quang',
+          pass:'p0041708',
+          remotePath:'/home/www/conference-server/'
+      }
   },
   demo: {
       sftp: {

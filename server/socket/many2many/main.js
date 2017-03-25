@@ -40,8 +40,14 @@ module.exports = {
                 }
                 console.log('Many2Many Connection ' + sessionId + ' received message ', message.id);
                 switch (message.id) {
-                    case 'connect':
-                        connect(ws,sessionId,message.groupId,message.partyId,message.sdpOffer,message.candidateList,message.bitrate);
+                	case 'bind':
+                		partyBind(ws,sessionId,message.groupId,message.partyId);
+                		break;
+                    case 'offer':
+                    	partyOffer(ws,sessionId,message.groupId,message.partyId,message.sdpOffer,message.bitrate);
+                        break;
+                    case 'candidate':
+                    	partyCandidate(ws,sessionId,message.groupId,message.partyId,message.candidate);
                         break;
                     case 'disconnect':
                         stop(sessionId);
@@ -66,30 +72,58 @@ function stop(sessionId) {
         if (Object.keys(conversation.partyById).length == 0) {
             convManager.releaseConversation(conversation.id)
         }
-    }
-    
+    }   
 }
 
-function connect(ws,sessionId, groupId,partyId,sdpOffer,candidateList,bitrate) {
-    try {
-        convManager.getConversation(groupId,function(conversation) {
-            var party = new Party(partyId,sessionId);
+function partyBind(ws,sessionId,groupId,partyId) {
+	try {
+			convManager.getConversation(groupId,function(conversation) {
+			var party = conversation.getPartyById(partyId);
+			if (party) {
+				party.release();
+				conversation.removeParty(partyId);
+			}
+			var party = new Party(partyId,sessionId);
             conversation.registerParty(party);
-            party.join(conversation,sdpOffer,candidateList,bitrate, function(success, sdpAnswer,candidateList) {
-                if (success) {
+            ws.send(JSON.stringify({
+                id: 'bindResponse'
+            }));
+		});        
+    } catch (exc) {
+        console.log('Party bind error ',exc, groupId, partyId);
+    }
+}
+
+function partyCandidate(ws,sessionId,groupId,partyId,candidate) {
+	try {
+			convManager.getConversation(groupId,function(conversation) {
+			var party = conversation.getPartyById(partyId);
+			party.sendCandidate(candidate);
+		});        
+    } catch (exc) {
+        console.log('Party candidate error ',exc, groupId, partyId);
+    }
+}
+
+function partyOffer(ws,sessionId, groupId,partyId,sdpOffer,bitrate) {
+    try {
+        	convManager.getConversation(groupId,function(conversation) {
+        	var party = conversation.getPartyById(partyId);
+            var onConnectResponse = function(success, sdpAnswer) {
+            	if (success) {
                     ws.send(JSON.stringify({
-                        id: 'connectResponse',
-                        response: 'accepted',
+                        id: 'offerAnswer',
                         sdpAnswer: sdpAnswer,
-                        candidateList:candidateList
                     }));
-                } else {
-                    ws.send(JSON.stringify({
-                        id: 'connectResponse',
-                        response: 'rejected',
-                    }));
-                }
-            })
+                } 
+            }
+            var onConnectCandidate =  function(candidate) {
+                ws.send(JSON.stringify({
+                    id: 'candidate',
+                    candidate:candidate
+                }));
+            }
+            party.sendOffer(conversation,sdpOffer,bitrate, onConnectResponse,onConnectCandidate);
         });
        
     } catch (exc) {
