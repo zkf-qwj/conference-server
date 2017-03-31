@@ -8,13 +8,6 @@ function RoomMember(id,profile, ws,room)
     this.ws = ws;
     this.room = room;
     this.profile = profile;
-    this.channelList = [];
-}
-
-RoomMember.prototype.registerChannel = function(channel)
-{
-    this.channelList.push(channel);
-    this.room.broadcastChannel(channel);
 }
 
 RoomMember.prototype.sendMessage = function(message)
@@ -29,9 +22,6 @@ RoomMember.prototype.sendMessage = function(message)
     }
 }
 
-
-
-
 RoomMember.prototype.releasePresent =  function() {
     this.sendMessage(  {
             id: 'releasePresent'
@@ -39,7 +29,6 @@ RoomMember.prototype.releasePresent =  function() {
 }
 
 RoomMember.prototype.leave = function() {
-    this.room.unbroadcastPublisher(this); 
 }
 
 

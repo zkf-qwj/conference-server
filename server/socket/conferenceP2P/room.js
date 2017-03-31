@@ -9,88 +9,7 @@ function Room(id)
     this.presentationBuffer = [];
     this.fileShare = [];
     this.livePresenterId = null;
-    this.screenChannel = null;
-    this.broadcastChannelList = [];
 }
-
-Room.prototype.broadcastChannel = function(channel)
-{
-    this.broadcastChannelList = _.reject(this.broadcastChannelList,function(ch) {
-       if ( ch.id == channel.id || (ch.source == channel.source && ch.publisherId==channel.publisherId)) {    
-           return true;
-       } 
-       return false;
-    });
-    var self = this;
-    this.broadcastChannelList.push(channel);
-    _.each(this.memberById, function(m)
-            {
-                try
-                {
-                    m.ws.send(JSON.stringify(
-                    {
-                        id: 'broadcastChannel',
-                        channelList: self.broadcastChannelList
-                    }));
-                }
-                catch (exception)
-                {
-                    console.log(exception);
-                }
-            });
-}
-
-
-Room.prototype.unbroadcastChannel = function(channel)
-{
-    var self = this;
-    this.broadcastChannelList = _.reject(this.broadcastChannelList ,function(ch) {
-       if ( ch.id == channel.id) {
-           return true;
-       } 
-       return false;
-    });
-    _.each(this.memberById, function(m)
-        {
-            try
-            {
-                m.ws.send(JSON.stringify(
-                {
-                    id: 'broadcastChannel',
-                    channelList: self.broadcastChannelList
-                }));
-            }
-            catch (exception)
-            {
-                console.log(exception);
-            }
-        });
-}
-
-
-Room.prototype.unbroadcastPublisher = function(publisher)
-{
-    var self = this;
-    this.broadcastChannelList = _.reject(this.broadcastChannelList ,function(item) {
-       return item.publisherId == publisher.id; 
-    });
-    _.each(this.memberById, function(m)
-        {
-            try
-            {
-                m.ws.send(JSON.stringify(
-                {
-                    id: 'broadcastChannel',
-                    channelList: self.broadcastChannelList
-                }));
-            }
-            catch (exception)
-            {
-                console.log(exception);
-            }
-        });
-}
-
 Room.prototype.registerMember = function(id,ws,callback)
 {
     var self = this;
@@ -141,24 +60,6 @@ Room.prototype.broadcastChat = function(source,text)
             });
 }
 
-Room.prototype.broadcastScreenChannel = function(screenChannel)
-{
-    _.each(this.memberById, function(m)
-            {
-                try
-                {
-                    m.ws.send(JSON.stringify(
-                    {
-                        id: 'screenShare',
-                        channel: screenChannel
-                    }));
-                }
-                catch (exception)
-                {
-                    console.log(exception);
-                }
-            });
-}
 
 Room.prototype.broadcastPresentation = function(source,event,object)
 {

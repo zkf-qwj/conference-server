@@ -46,9 +46,6 @@ module.exports = {
                     case 'join':
                         join(message.memberId, message.meetingId,ws);
                         break;
-                    case 'registerChannel':
-                        registerChannel(message.memberId, message.meetingId,message.channel);
-                        break;
                     case 'end':
                         end(message.meetingId);
                         break;
@@ -66,9 +63,6 @@ module.exports = {
                         break;
                     case 'releasePresent':
                         releasePresent(message.memberId, message.meetingId,message.livePresenterId);
-                        break;
-                    case 'shareScreen':
-                        shareScreen(message.meetingId,message.channel);
                         break;
                     case 'fileShare':
                         fileShare(message.memberId, message.meetingId,message.event,message.object);
@@ -88,15 +82,7 @@ module.exports = {
     }
 }
 
-function registerChannel(memberId, meetingId,channel) {
-    try {
-        var room = roomManager.getRoomById(meetingId);
-        var publisher = room.getMemberById(memberId);
-        publisher.registerChannel(channel);
-    } catch (exc) {
-        console.log('Register channel error ', memberId, meetingId,channel);
-    }
-}
+
 
 function leave(memberId, meetingId) {
     try {
@@ -134,7 +120,6 @@ function join(memberId, meetingId, ws) {
                         response: 'accepted',
                         presentation:room.presentationBuffer,
                         fileShare: room.fileShare,
-                        channelList:room.broadcastChannelList
                     }));
                     room.broadcastMember();
                 } else ws.send(JSON.stringify({
@@ -195,15 +180,7 @@ function chat(memberId, meetingId, text) {
     }
 }
 
-function shareScreen(meetingId,screenChannel) {
-    try {
-        var room = roomManager.getRoomById(meetingId);
-        room.screenChannel =  screenChannel;
-        room.broadcastScreenChannel(screenChannel)
-    } catch (exc) {
-        console.log('Share screen error ',exc,screenChannel);
-    }
-}
+
 
 function presentation(memberId, meetingId, event,object) {
     try {
