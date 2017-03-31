@@ -23,34 +23,40 @@ Connection.prototype.getEndpointById = function(id)
 }
 
 Connection.prototype.sendOffer = function(source,sdpOffer) {
+	var self = this;
     _.each(this.endpoints,function(endpoint) {
        if (endpoint.ws && endpoint.id != source.id) {
            endpoint.ws.send(JSON.stringify({
                id: 'offer',
-               sdpOffer:sdpOffer
+               sdpOffer:sdpOffer,
+               connectionId: self.id
            }));
        } 
     });      
 }
 
 Connection.prototype.sendAnswer = function(source,sdpAnswer) {
+	var self = this;
     _.each(this.endpoints,function(endpoint) {
         if (endpoint.ws && endpoint.id != source.id) {
             endpoint.ws.send(JSON.stringify({
                 id: 'answer',
-                sdpAnswer:sdpAnswer
+                sdpAnswer:sdpAnswer,
+                connectionId: self.id
             }));
         } 
      });      
 }
 
 Connection.prototype.sendIceCandidate = function(source,candidate) {
+	var self = this;
     _.each(this.endpoints,function(endpoint) {
        if (endpoint.ws && endpoint.id != source.id) {
            console.log('Send ice candidate ', endpoint.id, candidate);
            endpoint.ws.send(JSON.stringify({
                id: 'iceCandidate',
-               candidate:candidate
+               candidate:candidate,
+               connectionId: self.id
            }));
        } 
     });      
