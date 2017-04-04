@@ -28,6 +28,7 @@ gulp.task('develop', function () {
     script: 'app.js',
     ext: 'js coffee marko',
     ignore: '*.marko.js',
+    args: ['--env='+ENV],
     stdout: false
   }).on('readable', function () {
     this.stdout.on('data', function (chunk) {

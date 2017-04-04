@@ -4,6 +4,7 @@
 require('dotenv').config()
 var path = require( 'path'),
  _  = require('lodash');
+var argv = require('yargs').argv;
 
 /*function requiredProcessEnv(name) {
   if(!process.env[name]) {
@@ -15,7 +16,7 @@ var path = require( 'path'),
 // All configurations will extend these options
 // ============================================
 var all = {
-  env: process.env.NODE_ENV,
+  env:  argv.env || process.env.NODE_ENV ||  'development',
 
 
   // Browser-sync port
@@ -65,5 +66,5 @@ var all = {
 module.exports = _.merge(
   all,
   require('./shared'),
-  require('./'+process.env.NODE_ENV +'.js')
+  require('./'+all.env +'.js')
 )

@@ -22,6 +22,7 @@ module.exports = {
       session: 'conference-secret',
       api: '1234567890'
     },
+    mcuUrl:'http://125.212.233.22:3001',
   sequelize: {
     uri: 'sqlite://',
     options: {

@@ -16,6 +16,7 @@ module.exports = {
   hostname : 'localhost',
   //ws_uri: "ws://54.219.159.126:8888/kurento",
   ws_uri: "ws://training.demo.vietinterview.com:8888/kurento",
+  mcuUrl:'http://125.212.233.22:3001',
   security:
   {
       key:  './config/keys/server.key',

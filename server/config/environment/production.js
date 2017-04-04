@@ -27,6 +27,7 @@ module.exports = {
       api: '1234567890'
     },
   seedDB: true,
+  mcuUrl:'http://125.212.233.22:3001/',
   uploadDir:'/home/data/conferencecontrol/public',
   scriptDir:'/home/data/conferencecontrol/scripts'
 };

@@ -11,7 +11,8 @@ var MeetingSchema = new mongoose.Schema({
     data: Object,
     active:Boolean,
     domain:String,
-    type:String
+    type:String,
+    videoConferenceId: String
 });
 
 module.exports =  mongoose.model('Meeting', MeetingSchema);

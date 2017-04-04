@@ -1,6 +1,7 @@
 'use strict';
 
 var formidable = require('formidable');
+var request = require('request');
 var path = require('path');
 var jsonpatch =require( 'fast-json-patch'),
 fs = require('fs'),
@@ -51,7 +52,31 @@ function create(req, res) {
    var meeting = JSON.parse(req.body.meeting);
     Meeting.create(meeting)
       .then(function(entity){
-               res.json({'id':entity._id,status:true})
+    	  console.log('Connect to MCU server');
+    	  var headers = {
+    			    'User-Agent':       'Super Agent/0.0.1',
+    			    'Content-Type':     'application/x-www-form-urlencoded'
+    			}
+
+    			// Configure the request
+    			var options = {
+    			    url: config.mcuUrl+ '/createRoom',
+    			    method: 'POST',
+    			    headers: headers,
+    			    form: {'name': entity._id +":"+meeting.name}
+    			}
+
+    			// Start the request
+    			request(options, function (error, response, body) {
+    			    if (!error && response.statusCode == 200) {
+    			        // Print out the response body
+    			    	var room = JSON.parse(body);
+    			        entity.videoConferenceId = room._id;
+    			        Meeting.findByIdAndUpdate(entity._id, entity).exec();
+    			        res.json({'id':entity._id,status:true})
+    			    }
+    			})
+            
            })
    .catch(handleError(res));
 }
